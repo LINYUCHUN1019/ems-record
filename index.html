@@ -21,64 +21,6 @@
       border-color: #b91c1c !important;
       font-weight: 700;
     }
-
-    #print-container {
-      display: none;
-    }
-
-    /* A4 橫向單頁滿版鎖定列印 CSS (297mm x 210mm) */
-    @media print {
-      @page {
-        size: 297mm 210mm;
-        margin: 3mm 4mm;
-      }
-      html, body {
-        width: 290mm !important;
-        height: 202mm !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #ffffff !important;
-        overflow: hidden !important;
-      }
-      header, nav, main, footer, .no-print {
-        display: none !important;
-      }
-      #print-container {
-        display: block !important;
-        width: 100% !important;
-        background: #ffffff !important;
-        color: #000000 !important;
-        font-family: "DFKai-SB", "標楷體", "Microsoft JhengHei", sans-serif !important;
-        font-size: 9.5px !important;
-        line-height: 1.15 !important;
-      }
-      .ems-table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        border: 1.5px solid #000 !important;
-      }
-      .ems-table th, .ems-table td {
-        border: 1px solid #000 !important;
-        padding: 1.5px 2.5px !important;
-        vertical-align: middle !important;
-      }
-      .ems-header {
-        font-size: 16px !important;
-        font-weight: 900 !important;
-        letter-spacing: 2px !important;
-        text-align: center !important;
-        margin-bottom: 1.5px !important;
-      }
-      .chk-item {
-        display: inline-block !important;
-        white-space: nowrap !important;
-        margin-right: 2.5px !important;
-      }
-      .val-blue {
-        color: #0033aa !important;
-        font-weight: bold !important;
-      }
-    }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-900 font-sans flex flex-col min-h-screen">
@@ -564,13 +506,13 @@
               <tr class="bg-white">
                 <td class="p-2 font-bold text-slate-700 text-left">3. 送達醫院</td>
                 <td class="p-1"><input type="time" id="v3_time" class="p-1 border rounded w-20 text-center"></td>
-                <td class="p-1"><select id="v3_avpu" class="p-1.5 border rounded bg-slate-50"><option value="">選擇</option><option>清</option><option>聲</option><option>痛</option><option>否</option></select></td>
-                <td class="p-1"><input type="number" id="v3_rr" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
-                <td class="p-1"><input type="number" id="v3_pr" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
-                <td class="p-1 flex items-center gap-0.5 justify-center mt-1"><input type="number" id="v3_sbp" class="w-12 p-1.5 border rounded text-center" placeholder="S">/<input type="number" id="v3_dbp" class="w-12 p-1.5 border rounded text-center" placeholder="D"></td>
-                <td class="p-1"><div class="flex gap-0.5 justify-center"><input type="number" id="v3_e" class="w-8 p-1.5 border rounded text-center" placeholder="E"><input type="number" id="v3_v" class="w-8 p-1.5 border rounded text-center" placeholder="V"><input type="number" id="v3_m" class="w-8 p-1.5 border rounded text-center" placeholder="M"></div></td>
-                <td class="p-1"><input type="number" id="v3_spo2" class="w-14 p-1.5 border rounded text-center font-bold text-blue-600" placeholder="--"></td>
-                <td class="p-1"><input type="number" step="0.1" id="v3_bt" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+                <td class="p-1"><select id="v3_avpu" onchange="calcTriageDirectly()" class="p-1.5 border rounded bg-slate-50"><option value="">選擇</option><option>清</option><option>聲</option><option>痛</option><option>否</option></select></td>
+                <td class="p-1"><input type="number" id="v3_rr" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+                <td class="p-1"><input type="number" id="v3_pr" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+                <td class="p-1 flex items-center gap-0.5 justify-center mt-1"><input type="number" id="v3_sbp" oninput="calcTriageDirectly()" class="w-12 p-1.5 border rounded text-center" placeholder="S">/<input type="number" id="v3_dbp" class="w-12 p-1.5 border rounded text-center" placeholder="D"></td>
+                <td class="p-1"><div class="flex gap-0.5 justify-center"><input type="number" id="v3_e" oninput="calcTriageDirectly()" class="w-8 p-1.5 border rounded text-center" placeholder="E"><input type="number" id="v3_v" oninput="calcTriageDirectly()" class="w-8 p-1.5 border rounded text-center" placeholder="V"><input type="number" id="v3_m" oninput="calcTriageDirectly()" class="w-8 p-1.5 border rounded text-center" placeholder="M"></div></td>
+                <td class="p-1"><input type="number" id="v3_spo2" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center font-bold text-blue-600" placeholder="--"></td>
+                <td class="p-1"><input type="number" step="0.1" id="v3_bt" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
                 <td class="p-1"><input type="number" id="v3_sugar" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
               </tr>
             </tbody>
@@ -938,7 +880,7 @@
         </div>
       </div>
 
-      <!-- 送出與 PDF 匯出快捷工具列 (網址已鎖定寫死) -->
+      <!-- 送出與 PDF 匯出快捷工具列 -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-3">
         <div class="text-xs text-slate-600">
           <div class="flex items-center gap-1.5 mb-1">
@@ -1046,14 +988,12 @@
         actions.push('常規生命徵象監測', '依主訴提供支持性救護處置');
       }
 
-      // 自動選取 radio
       const radioPrehosp = document.querySelector(`input[name="prehosp_level"][value="${level}"]`);
       if (radioPrehosp) radioPrehosp.checked = true;
 
       const radioUrgency = document.querySelector(`input[name="urgency_type"][value="${urgency}"]`);
       if (radioUrgency) radioUrgency.checked = true;
 
-      // 即時渲染第 5 頁卡片
       const badge = document.getElementById('aiTriageBadge');
       if (badge) {
         badge.textContent = `${level} (${urgency})`;
@@ -1128,17 +1068,17 @@
     }
 
     // =========================================================================
-    // 100% 穩定免彈窗 PDF 原生列印
+    // 100% 穩定動態 Landscape Iframe PDF 輸出引擎 (所有平板與電腦統一不跑版)
     // =========================================================================
     function printExactEMSForm() {
       function chk(val) {
         return val 
-          ? `<span class="chk-item val-blue" style="background:#e0e7ff; border:1px solid #0033aa; padding:0 1.5px; border-radius:2px;">[✔]</span>` 
-          : `<span class="chk-item" style="color:#777;">☐</span>`;
+          ? `<span class="chk-item val-blue" style="background:#e0e7ff; border:1.2px solid #0033aa; padding:0 1.5px; border-radius:2px; font-weight:900;">[✔]</span>` 
+          : `<span class="chk-item" style="color:#777; border:1px solid #aaa; padding:0 1.5px; border-radius:2px;">☐</span>`;
       }
 
       function valBlue(text) {
-        return `<span class="val-blue">${text || ''}</span>`;
+        return `<span class="val-blue" style="color:#0033aa; font-weight:bold;">${text || ''}</span>`;
       }
 
       const dateVal = document.getElementById('case_date').value;
@@ -1197,246 +1137,271 @@
       const sigRefuse = document.getElementById('sigRefuse').toDataURL();
       const sigPt = document.getElementById('sigPatient').toDataURL();
 
-      const printContainer = document.getElementById('print-container');
-      printContainer.innerHTML = `
-        <div class="ems-header">台灣院前救護協會救護紀錄表</div>
-        <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:2px;">
-          <span>案件編號：<b>${valBlue(document.getElementById('case_no').value)}</b></span>
-        </div>
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>台灣院前救護協會救護紀錄表_${document.getElementById('case_no').value}</title>
+          <style>
+            @page { size: 297mm 210mm; margin: 3mm 4mm; }
+            html, body {
+              width: 290mm !important;
+              height: 202mm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #ffffff !important;
+              color: #000000 !important;
+              font-family: "DFKai-SB", "標楷體", "Microsoft JhengHei", sans-serif !important;
+              font-size: 9.5px !important;
+              line-height: 1.15 !important;
+              overflow: hidden !important;
+            }
+            .ems-table { width: 100% !important; border-collapse: collapse !important; border: 1.5px solid #000 !important; }
+            .ems-table th, .ems-table td { border: 1px solid #000 !important; padding: 1.5px 2.5px !important; vertical-align: middle !important; }
+            .ems-header { font-size: 16px !important; font-weight: 900 !important; letter-spacing: 2px !important; text-align: center !important; margin-bottom: 1.5px !important; }
+            .chk-item { display: inline-block !important; white-space: nowrap !important; margin-right: 2.5px !important; }
+            .val-blue { color: #0033aa !important; font-weight: bold !important; }
+          </style>
+        </head>
+        <body>
+          <div class="ems-header">台灣院前救護協會救護紀錄表</div>
+          <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:2px;">
+            <span>案件編號：<b>${valBlue(document.getElementById('case_no').value)}</b></span>
+          </div>
 
-        <table class="ems-table">
-          <!-- 1. 派遣資料 (50%) 與 處置項目 (50%) -->
-          <tr style="background:#f1f5f9; text-align:center; font-weight:bold;">
-            <td colspan="6" style="width:50%;">派遣資料</td>
-            <td colspan="4" style="width:25%;">處置項目 (此欄可複選)</td>
-            <td colspan="3" style="width:25%;">請在圖上標示說明受傷部位及其尺寸</td>
-          </tr>
+          <table class="ems-table">
+            <tr style="background:#f1f5f9; text-align:center; font-weight:bold;">
+              <td colspan="6" style="width:50%;">派遣資料</td>
+              <td colspan="4" style="width:25%;">處置項目 (此欄可複選)</td>
+              <td colspan="3" style="width:25%;">請在圖上標示說明受傷部位及其尺寸</td>
+            </tr>
 
-          <tr>
-            <td style="width:55px; font-weight:bold;">日期</td>
-            <td colspan="2">${yr ? valBlue(yr) + ' 年 ' : ''}${mo ? valBlue(mo) + ' 月 ' : ''}${dy ? valBlue(dy) + ' 日' : ''}</td>
-            <td style="width:80px; font-weight:bold;">協同處理單位</td>
-            <td colspan="2">${valBlue(document.getElementById('assist_unit').value)}</td>
-            <td colspan="2" style="font-weight:bold; text-align:center; background:#f8fafc;">基本呼吸道 / 呼吸處置</td>
-            <td colspan="2" style="font-weight:bold; text-align:center; background:#f8fafc;">心肺復甦術</td>
-            <td colspan="3" rowspan="4" style="vertical-align:top; text-align:center;">
-              <div style="display:flex; justify-content:space-around; align-items:center; padding:1px;">
-                <svg width="45" height="70" viewBox="0 0 60 90" stroke="#000" fill="none" stroke-width="1.2">
-                  <circle cx="30" cy="12" r="8"/>
-                  <rect x="20" y="22" width="20" height="32"/>
-                  <line x1="20" y1="22" x2="8" y2="50"/>
-                  <line x1="40" y1="22" x2="52" y2="50"/>
-                  <line x1="23" y1="54" x2="20" y2="88"/>
-                  <line x1="37" y1="54" x2="40" y2="88"/>
-                  <text x="18" y="10" font-size="7" stroke="none" fill="#000">正面</text>
-                </svg>
-                <svg width="45" height="70" viewBox="0 0 60 90" stroke="#000" fill="none" stroke-width="1.2">
-                  <circle cx="30" cy="12" r="8"/>
-                  <rect x="20" y="22" width="20" height="32"/>
-                  <line x1="20" y1="22" x2="8" y2="50"/>
-                  <line x1="40" y1="22" x2="52" y2="50"/>
-                  <line x1="23" y1="54" x2="20" y2="88"/>
-                  <line x1="37" y1="54" x2="40" y2="88"/>
-                  <text x="18" y="10" font-size="7" stroke="none" fill="#000">背面</text>
-                </svg>
-              </div>
-              <div style="text-align:left; font-size:9px; border-top:1px dashed #999; padding-top:2px;">
-                <b>點選部位：</b><span>${valBlue(Array.from(selectedBodyParts).join('、') || '無明顯外傷')}</span><br>
-                <b>補述說明：</b><span>${valBlue(document.getElementById('body_injury_notes').value || '無特殊補述')}</span>
-              </div>
-            </td>
-          </tr>
+            <tr>
+              <td style="width:55px; font-weight:bold;">日期</td>
+              <td colspan="2">${yr ? valBlue(yr) + ' 年 ' : ''}${mo ? valBlue(mo) + ' 月 ' : ''}${dy ? valBlue(dy) + ' 日' : ''}</td>
+              <td style="width:80px; font-weight:bold;">協同處理單位</td>
+              <td colspan="2">${valBlue(document.getElementById('assist_unit').value)}</td>
+              <td colspan="2" style="font-weight:bold; text-align:center; background:#f8fafc;">基本呼吸道 / 呼吸處置</td>
+              <td colspan="2" style="font-weight:bold; text-align:center; background:#f8fafc;">心肺復甦術</td>
+              <td colspan="3" rowspan="4" style="vertical-align:top; text-align:center;">
+                <div style="display:flex; justify-content:space-around; align-items:center; padding:1px;">
+                  <svg width="45" height="70" viewBox="0 0 60 90" stroke="#000" fill="none" stroke-width="1.2">
+                    <circle cx="30" cy="12" r="8"/>
+                    <rect x="20" y="22" width="20" height="32"/>
+                    <line x1="20" y1="22" x2="8" y2="50"/>
+                    <line x1="40" y1="22" x2="52" y2="50"/>
+                    <line x1="23" y1="54" x2="20" y2="88"/>
+                    <line x1="37" y1="54" x2="40" y2="88"/>
+                    <text x="18" y="10" font-size="7" stroke="none" fill="#000">正面</text>
+                  </svg>
+                  <svg width="45" height="70" viewBox="0 0 60 90" stroke="#000" fill="none" stroke-width="1.2">
+                    <circle cx="30" cy="12" r="8"/>
+                    <rect x="20" y="22" width="20" height="32"/>
+                    <line x1="20" y1="22" x2="8" y2="50"/>
+                    <line x1="40" y1="22" x2="52" y2="50"/>
+                    <line x1="23" y1="54" x2="20" y2="88"/>
+                    <line x1="37" y1="54" x2="40" y2="88"/>
+                    <text x="18" y="10" font-size="7" stroke="none" fill="#000">背面</text>
+                  </svg>
+                </div>
+                <div style="text-align:left; font-size:9px; border-top:1px dashed #999; padding-top:2px;">
+                  <b>點選部位：</b><span>${valBlue(Array.from(selectedBodyParts).join('、') || '無明顯外傷')}</span><br>
+                  <b>補述說明：</b><span>${valBlue(document.getElementById('body_injury_notes').value || '無特殊補述')}</span>
+                </div>
+              </td>
+            </tr>
 
-          <tr>
-            <td style="font-weight:bold;">受理時間</td>
-            <td>${tRec.h ? valBlue(tRec.h) + '時' + valBlue(tRec.m) + '分' : ''}</td>
-            <td style="font-weight:bold;">出勤時間</td>
-            <td>${tDis.h ? valBlue(tDis.h) + '時' + valBlue(tDis.m) + '分' : ''}</td>
-            <td style="font-weight:bold;">到達現場</td>
-            <td>${tArvSc.h ? valBlue(tArvSc.h) + '時' + valBlue(tArvSc.m) + '分' : ''}</td>
-            <td colspan="2" rowspan="3" style="font-size:9px; vertical-align:top;">
-              <span class="chk-item">${chk(txAirway.includes('口咽呼吸道'))}口咽呼吸道</span>
-              <span class="chk-item">${chk(txAirway.includes('鼻咽呼吸道'))}鼻咽呼吸道</span><br>
-              <span class="chk-item">${chk(txAirway.includes('抽吸'))}抽吸</span>
-              <span class="chk-item">${chk(txAirway.includes('哈姆立克法'))}哈姆立克法</span><br>
-              <span class="chk-item">${chk(document.getElementById('tx_sga').checked)}聲門上(SGA) ${valBlue(document.getElementById('tx_sga_no').value)} 號</span><br>
-              <span class="chk-item">${chk(document.getElementById('tx_nc').checked)}鼻管 ${valBlue(document.getElementById('tx_nc_l').value)} L/Min</span><br>
-              <span class="chk-item">${chk(document.getElementById('tx_mask').checked)}面罩 ${valBlue(document.getElementById('tx_mask_l').value)} L/Min</span><br>
-              <span class="chk-item">${chk(txAirway.includes('非再呼吸型面罩'))}非再呼吸型面罩</span><br>
-              <span class="chk-item">${chk(txAirway.includes('BVM(正壓輔助呼吸)'))}BVM(正壓輔助呼吸)</span><br>
-              <span class="chk-item">${chk(txAirway.includes('霧化吸入型面罩'))}霧化吸入型面罩</span><br>
-              <span class="chk-item">其他: ${valBlue(document.getElementById('tx_airway_oth').value)}</span>
-            </td>
-            <td colspan="2" rowspan="3" style="font-size:9px; vertical-align:top;">
-              <span class="chk-item">${chk(txAirway.includes('自動心肺復甦機(MCPR)'))}自動心肺復甦機(MCPR)</span><br>
-              <span class="chk-item">${chk(document.getElementById('tx_cpr').checked)}CPR ${valBlue(document.getElementById('tx_cpr_min').value)} 分鐘</span><br>
-              <span class="chk-item">${chk(document.getElementById('tx_aed_shock').checked || txAirway.includes('AED不建議電擊'))}使用 AED</span><br>
-              <span class="chk-item"> ${chk(document.getElementById('tx_aed_shock').checked)}電擊去顫 ${valBlue(document.getElementById('tx_aed_cnt').value)} 次</span><br>
-              <span class="chk-item"> ${chk(txAirway.includes('AED不建議電擊'))}不建議電擊</span>
-            </td>
-          </tr>
+            <tr>
+              <td style="font-weight:bold;">受理時間</td>
+              <td>${tRec.h ? valBlue(tRec.h) + '時' + valBlue(tRec.m) + '分' : ''}</td>
+              <td style="font-weight:bold;">出勤時間</td>
+              <td>${tDis.h ? valBlue(tDis.h) + '時' + valBlue(tDis.m) + '分' : ''}</td>
+              <td style="font-weight:bold;">到達現場</td>
+              <td>${tArvSc.h ? valBlue(tArvSc.h) + '時' + valBlue(tArvSc.m) + '分' : ''}</td>
+              <td colspan="2" rowspan="3" style="font-size:9px; vertical-align:top;">
+                <span class="chk-item">${chk(txAirway.includes('口咽呼吸道'))}口咽呼吸道</span>
+                <span class="chk-item">${chk(txAirway.includes('鼻咽呼吸道'))}鼻咽呼吸道</span><br>
+                <span class="chk-item">${chk(txAirway.includes('抽吸'))}抽吸</span>
+                <span class="chk-item">${chk(txAirway.includes('哈姆立克法'))}哈姆立克法</span><br>
+                <span class="chk-item">${chk(document.getElementById('tx_sga').checked)}聲門上(SGA) ${valBlue(document.getElementById('tx_sga_no').value)} 號</span><br>
+                <span class="chk-item">${chk(document.getElementById('tx_nc').checked)}鼻管 ${valBlue(document.getElementById('tx_nc_l').value)} L/Min</span><br>
+                <span class="chk-item">${chk(document.getElementById('tx_mask').checked)}面罩 ${valBlue(document.getElementById('tx_mask_l').value)} L/Min</span><br>
+                <span class="chk-item">${chk(txAirway.includes('非再呼吸型面罩'))}非再呼吸型面罩</span><br>
+                <span class="chk-item">${chk(txAirway.includes('BVM(正壓輔助呼吸)'))}BVM(正壓輔助呼吸)</span><br>
+                <span class="chk-item">${chk(txAirway.includes('霧化吸入型面罩'))}霧化吸入型面罩</span><br>
+                <span class="chk-item">其他: ${valBlue(document.getElementById('tx_airway_oth').value)}</span>
+              </td>
+              <td colspan="2" rowspan="3" style="font-size:9px; vertical-align:top;">
+                <span class="chk-item">${chk(txAirway.includes('自動心肺復甦機(MCPR)'))}自動心肺復甦機(MCPR)</span><br>
+                <span class="chk-item">${chk(document.getElementById('tx_cpr').checked)}CPR ${valBlue(document.getElementById('tx_cpr_min').value)} 分鐘</span><br>
+                <span class="chk-item">${chk(document.getElementById('tx_aed_shock').checked || txAirway.includes('AED不建議電擊'))}使用 AED</span><br>
+                <span class="chk-item"> ${chk(document.getElementById('tx_aed_shock').checked)}電擊去顫 ${valBlue(document.getElementById('tx_aed_cnt').value)} 次</span><br>
+                <span class="chk-item"> ${chk(txAirway.includes('AED不建議電擊'))}不建議電擊</span>
+              </td>
+            </tr>
 
-          <tr>
-            <td style="font-weight:bold;">離開現場</td>
-            <td>${tDepSc.h ? valBlue(tDepSc.h) + '時' + valBlue(tDepSc.m) + '分' : ''}</td>
-            <td style="font-weight:bold;">送進醫院</td>
-            <td>${tArvHo.h ? valBlue(tArvHo.h) + '時' + valBlue(tArvHo.m) + '分' : ''}</td>
-            <td style="font-weight:bold;">離開醫院</td>
-            <td>${tDepHo.h ? valBlue(tDepHo.h) + '時' + valBlue(tDepHo.m) + '分' : ''} (返隊:${tBk.h ? valBlue(tBk.h) + '時' + valBlue(tBk.m) + '分' : ''})</td>
-          </tr>
+            <tr>
+              <td style="font-weight:bold;">離開現場</td>
+              <td>${tDepSc.h ? valBlue(tDepSc.h) + '時' + valBlue(tDepSc.m) + '分' : ''}</td>
+              <td style="font-weight:bold;">送進醫院</td>
+              <td>${tArvHo.h ? valBlue(tArvHo.h) + '時' + valBlue(tArvHo.m) + '分' : ''}</td>
+              <td style="font-weight:bold;">離開醫院</td>
+              <td>${tDepHo.h ? valBlue(tDepHo.h) + '時' + valBlue(tDepHo.m) + '分' : ''} (返隊:${tBk.h ? valBlue(tBk.h) + '時' + valBlue(tBk.m) + '分' : ''})</td>
+            </tr>
 
-          <tr>
-            <td style="font-weight:bold;">發生地點</td>
-            <td colspan="5">${valBlue(document.getElementById('incident_loc').value)}</td>
-          </tr>
+            <tr>
+              <td style="font-weight:bold;">發生地點</td>
+              <td colspan="5">${valBlue(document.getElementById('incident_loc').value)}</td>
+            </tr>
 
-          <tr>
-            <td style="font-weight:bold;">送往醫院</td>
-            <td colspan="2">${valBlue(document.getElementById('dest_hosp').value)}</td>
-            <td colspan="3">
-              <span class="chk-item">${chk(hospReason === '就近適當')}就近適當</span>
-              <span class="chk-item">${chk(hospReason === '救護指揮中心')}救護指揮中心</span>
-              <span class="chk-item">${chk(hospReason === '傷病患或家屬要求')}傷病患/家屬要求</span>
-            </td>
-            <td colspan="4" style="font-weight:bold; text-align:center; background:#f8fafc;">藥物處置</td>
-            <td colspan="3" style="font-weight:bold; text-align:center; background:#f8fafc;">創傷與其他處置</td>
-          </tr>
+            <tr>
+              <td style="font-weight:bold;">送往醫院</td>
+              <td colspan="2">${valBlue(document.getElementById('dest_hosp').value)}</td>
+              <td colspan="3">
+                <span class="chk-item">${chk(hospReason === '就近適當')}就近適當</span>
+                <span class="chk-item">${chk(hospReason === '救護指揮中心')}救護指揮中心</span>
+                <span class="chk-item">${chk(hospReason === '傷病患或家屬要求')}傷病患/家屬要求</span>
+              </td>
+              <td colspan="4" style="font-weight:bold; text-align:center; background:#f8fafc;">藥物處置</td>
+              <td colspan="3" style="font-weight:bold; text-align:center; background:#f8fafc;">創傷與其他處置</td>
+            </tr>
 
-          <tr>
-            <td style="font-weight:bold;">未送醫原因</td>
-            <td colspan="5" style="font-size:8.5px;">
-              <span class="chk-item">${chk(noTransChecked.includes('未接觸'))}未接觸</span>
-              <span class="chk-item">${chk(noTransChecked.includes('未發現'))}未發現</span>
-              <span class="chk-item">${chk(noTransChecked.includes('誤報'))}誤報</span>
-              <span class="chk-item">${chk(noTransChecked.includes('中途取消'))}中途取消</span>
-              <span class="chk-item">${chk(noTransChecked.includes('拒送'))}拒送</span>
-              <span class="chk-item">${chk(noTransChecked.includes('警察處理'))}警察處理</span>
-              <span class="chk-item">${chk(noTransChecked.includes('現場死亡'))}現場死亡</span>
-              <span class="chk-item">${chk(noTransChecked.includes('出勤待命'))}出勤待命</span>
-              <span class="chk-item">${chk(noTransChecked.includes('火警'))}火警</span>
-              <span class="chk-item">${chk(noTransChecked.includes('支援勤務'))}支援勤務</span>
-              <span class="chk-item">其他: ${valBlue(document.getElementById('no_trans_other').value)}</span>
-            </td>
-            <td colspan="4" rowspan="3" style="font-size:9px; vertical-align:top;">
-              <span class="chk-item">${chk(document.getElementById('tx_iv').checked)}靜脈輸液,部位: ${valBlue(document.getElementById('tx_iv_site').value)}</span><br>
-              <span class="chk-item"> ${chk(document.getElementById('tx_ns').checked)}0.9% N/S ${valBlue(document.getElementById('tx_ns_ml').value)} ml</span>
-              <span class="chk-item"> ${chk(document.getElementById('tx_lr').checked)}L/R ${valBlue(document.getElementById('tx_lr_ml').value)} ml</span><br>
-              <span class="chk-item"> ${chk(document.getElementById('tx_g5').checked)}${valBlue(document.getElementById('tx_g5_pct').value)}% 葡萄糖液 ${valBlue(document.getElementById('tx_g5_ml').value)} ml</span><br>
-              <span class="chk-item">${chk(txAirway.includes('給予口服葡萄糖液/粉'))}給予口服葡萄糖液/粉</span><br>
-              <span class="chk-item">${chk(txAirway.includes('協助使用Aspirin'))}協助使用 Aspirin</span><br>
-              <span class="chk-item">${chk(document.getElementById('tx_ntg').checked)}協助使用 NTG 含片 ${valBlue(document.getElementById('tx_ntg_cnt').value)} 片</span><br>
-              <span class="chk-item">${chk(document.getElementById('tx_broncho').checked)}協助使用支氣管擴張劑 ${valBlue(document.getElementById('tx_broncho_cnt').value)} 次</span>
-            </td>
-            <td colspan="3" rowspan="3" style="font-size:9px; vertical-align:top;">
-              <span class="chk-item">${chk(txAirway.includes('頸圈'))}頸圈</span>
-              <span class="chk-item">${chk(txAirway.includes('清洗傷口'))}清洗傷口</span>
-              <span class="chk-item">${chk(txAirway.includes('止血、包紮'))}止血、包紮</span><br>
-              <span class="chk-item">${chk(txAirway.includes('骨折固定'))}骨折固定</span>
-              <span class="chk-item">${chk(txAirway.includes('長背板固定'))}長背板固定</span>
-              <span class="chk-item">${chk(txAirway.includes('KED固定'))}KED固定</span><br>
-              <span class="chk-item">${chk(txAirway.includes('保暖'))}保暖</span>
-              <span class="chk-item">${chk(txAirway.includes('心理支持'))}心理支持</span>
-              <span class="chk-item">${chk(txAirway.includes('急產接生'))}急產接生</span><br>
-              <span class="chk-item">${chk(txAirway.includes('約束帶'))}約束帶</span>
-              <span class="chk-item">${chk(txAirway.includes('沖洗眼睛'))}沖洗眼睛</span>
-              <span class="chk-item">其他: ${valBlue(document.getElementById('tx_tm_oth').value || document.getElementById('tx_misc_oth').value)}</span><br>
-              <b>搬運/姿勢：</b>
-              <span class="chk-item">${chk(txAirway.includes('自行上車'))}自行上車</span>
-              <span class="chk-item">${chk(txAirway.includes('以適當方式搬運'))}以適當方式搬運</span><br>
-              <span class="chk-item">${chk(txAirway.includes('平躺'))}平躺</span>
-              <span class="chk-item">${chk(txAirway.includes('半坐臥'))}半坐臥</span>
-              <span class="chk-item">${chk(txAirway.includes('左側臥'))}左側臥</span>
-              <span class="chk-item">${chk(txAirway.includes('右側臥'))}右側臥</span>
-              <span class="chk-item">${chk(txAirway.includes('下肢抬高'))}下肢抬高</span>
-            </td>
-          </tr>
+            <tr>
+              <td style="font-weight:bold;">未送醫原因</td>
+              <td colspan="5" style="font-size:8.5px;">
+                <span class="chk-item">${chk(noTransChecked.includes('未接觸'))}未接觸</span>
+                <span class="chk-item">${chk(noTransChecked.includes('未發現'))}未發現</span>
+                <span class="chk-item">${chk(noTransChecked.includes('誤報'))}誤報</span>
+                <span class="chk-item">${chk(noTransChecked.includes('中途取消'))}中途取消</span>
+                <span class="chk-item">${chk(noTransChecked.includes('拒送'))}拒送</span>
+                <span class="chk-item">${chk(noTransChecked.includes('警察處理'))}警察處理</span>
+                <span class="chk-item">${chk(noTransChecked.includes('現場死亡'))}現場死亡</span>
+                <span class="chk-item">${chk(noTransChecked.includes('出勤待命'))}出勤待命</span>
+                <span class="chk-item">${chk(noTransChecked.includes('火警'))}火警</span>
+                <span class="chk-item">${chk(noTransChecked.includes('支援勤務'))}支援勤務</span>
+                <span class="chk-item">其他: ${valBlue(document.getElementById('no_trans_other').value)}</span>
+              </td>
+              <td colspan="4" rowspan="3" style="font-size:9px; vertical-align:top;">
+                <span class="chk-item">${chk(document.getElementById('tx_iv').checked)}靜脈輸液,部位: ${valBlue(document.getElementById('tx_iv_site').value)}</span><br>
+                <span class="chk-item"> ${chk(document.getElementById('tx_ns').checked)}0.9% N/S ${valBlue(document.getElementById('tx_ns_ml').value)} ml</span>
+                <span class="chk-item"> ${chk(document.getElementById('tx_lr').checked)}L/R ${valBlue(document.getElementById('tx_lr_ml').value)} ml</span><br>
+                <span class="chk-item"> ${chk(document.getElementById('tx_g5').checked)}${valBlue(document.getElementById('tx_g5_pct').value)}% 葡萄糖液 ${valBlue(document.getElementById('tx_g5_ml').value)} ml</span><br>
+                <span class="chk-item">${chk(txAirway.includes('給予口服葡萄糖液/粉'))}給予口服葡萄糖液/粉</span><br>
+                <span class="chk-item">${chk(txAirway.includes('協助使用Aspirin'))}協助使用 Aspirin</span><br>
+                <span class="chk-item">${chk(document.getElementById('tx_ntg').checked)}協助使用 NTG 含片 ${valBlue(document.getElementById('tx_ntg_cnt').value)} 片</span><br>
+                <span class="chk-item">${chk(document.getElementById('tx_broncho').checked)}協助使用支氣管擴張劑 ${valBlue(document.getElementById('tx_broncho_cnt').value)} 次</span>
+              </td>
+              <td colspan="3" rowspan="3" style="font-size:9px; vertical-align:top;">
+                <span class="chk-item">${chk(txAirway.includes('頸圈'))}頸圈</span>
+                <span class="chk-item">${chk(txAirway.includes('清洗傷口'))}清洗傷口</span>
+                <span class="chk-item">${chk(txAirway.includes('止血、包紮'))}止血、包紮</span><br>
+                <span class="chk-item">${chk(txAirway.includes('骨折固定'))}骨折固定</span>
+                <span class="chk-item">${chk(txAirway.includes('長背板固定'))}長背板固定</span>
+                <span class="chk-item">${chk(txAirway.includes('KED固定'))}KED固定</span><br>
+                <span class="chk-item">${chk(txAirway.includes('保暖'))}保暖</span>
+                <span class="chk-item">${chk(txAirway.includes('心理支持'))}心理支持</span>
+                <span class="chk-item">${chk(txAirway.includes('急產接生'))}急產接生</span><br>
+                <span class="chk-item">${chk(txAirway.includes('約束帶'))}約束帶</span>
+                <span class="chk-item">${chk(txAirway.includes('沖洗眼睛'))}沖洗眼睛</span>
+                <span class="chk-item">其他: ${valBlue(document.getElementById('tx_tm_oth').value || document.getElementById('tx_misc_oth').value)}</span><br>
+                <b>搬運/姿勢：</b>
+                <span class="chk-item">${chk(txAirway.includes('自行上車'))}自行上車</span>
+                <span class="chk-item">${chk(txAirway.includes('以適當方式搬運'))}以適當方式搬運</span><br>
+                <span class="chk-item">${chk(txAirway.includes('平躺'))}平躺</span>
+                <span class="chk-item">${chk(txAirway.includes('半坐臥'))}半坐臥</span>
+                <span class="chk-item">${chk(txAirway.includes('左側臥'))}左側臥</span>
+                <span class="chk-item">${chk(txAirway.includes('右側臥'))}右側臥</span>
+                <span class="chk-item">${chk(txAirway.includes('下肢抬高'))}下肢抬高</span>
+              </td>
+            </tr>
 
-          <!-- 2. 傷病患個資 -->
-          <tr style="background:#f1f5f9; text-align:center; font-weight:bold;">
-            <td colspan="6">傷病患資料</td>
-          </tr>
-          <tr>
-            <td style="font-weight:bold;">傷病患姓名</td>
-            <td colspan="2">${valBlue(document.getElementById('pt_name').value)} (${chk(document.getElementById('pt_name_unk').checked)}不詳)</td>
-            <td style="font-weight:bold;">性別</td>
-            <td>${chk(document.querySelector('input[name="pt_gender"]:checked')?.value === '男')}男 ${chk(document.querySelector('input[name="pt_gender"]:checked')?.value === '女')}女 ${chk(document.querySelector('input[name="pt_gender"]:checked')?.value === '經評估後判斷')}經評估判斷</td>
-            <td style="font-weight:bold;">年齡: ${valBlue(document.getElementById('pt_age').value)} 歲 (${chk(document.getElementById('pt_age_est').checked)}評估)</td>
-          </tr>
+            <!-- 2. 傷病患個資 -->
+            <tr style="background:#f1f5f9; text-align:center; font-weight:bold;">
+              <td colspan="6">傷病患資料</td>
+            </tr>
+            <tr>
+              <td style="font-weight:bold;">傷病患姓名</td>
+              <td colspan="2">${valBlue(document.getElementById('pt_name').value)} (${chk(document.getElementById('pt_name_unk').checked)}不詳)</td>
+              <td style="font-weight:bold;">性別</td>
+              <td>${chk(document.querySelector('input[name="pt_gender"]:checked')?.value === '男')}男 ${chk(document.querySelector('input[name="pt_gender"]:checked')?.value === '女')}女 ${chk(document.querySelector('input[name="pt_gender"]:checked')?.value === '經評估後判斷')}經評估判斷</td>
+              <td style="font-weight:bold;">年齡: ${valBlue(document.getElementById('pt_age').value)} 歲 (${chk(document.getElementById('pt_age_est').checked)}評估)</td>
+            </tr>
 
-          <tr>
-            <td style="font-weight:bold;">身分證/護照</td>
-            <td colspan="2">${valBlue(document.getElementById('pt_id').value)} (${chk(document.getElementById('pt_id_unk').checked)}不詳)</td>
-            <td style="font-weight:bold;">財物明細</td>
-            <td colspan="2">${chk(propStatus === '未經手')}未經手 ${chk(propStatus === '有')}有 保管人: ${valBlue(propDesc)}</td>
-          </tr>
+            <tr>
+              <td style="font-weight:bold;">身分證/護照</td>
+              <td colspan="2">${valBlue(document.getElementById('pt_id').value)} (${chk(document.getElementById('pt_id_unk').checked)}不詳)</td>
+              <td style="font-weight:bold;">財物明細</td>
+              <td colspan="2">${chk(propStatus === '未經手')}未經手 ${chk(propStatus === '有')}有 保管人: ${valBlue(propDesc)}</td>
+            </tr>
 
-          <tr>
-            <td style="font-weight:bold;">住址</td>
-            <td colspan="5">
-              ${valBlue(addrCity ? addrCity : '')}${valBlue(addrDist ? addrDist : '')}${valBlue(addrVil ? addrVil : '')}${valBlue(addrNei ? addrNei + '鄰' : '')}${valBlue(addrRoad ? addrRoad : '')}${valBlue(addrSec ? addrSec + '段' : '')}${valBlue(addrLane ? addrLane + '巷' : '')}${valBlue(addrAlly ? addrAlly + '弄' : '')}${valBlue(addrNo ? addrNo + '號' : '')}${valBlue(addrFl ? addrFl + '樓' : '')}
-              (${chk(addrSame)}同發生地點)
-            </td>
-            <td colspan="7" style="font-size:9px; background:#f8fafc;">
-              <b>ALS 處置：</b>${chk(document.getElementById('als_ett').checked)}氣管內管(${valBlue(document.getElementById('als_ett_no').value)}號/fix:${valBlue(document.getElementById('als_ett_fix').value)}cm)
-              <span class="chk-item">${chk(document.getElementById('als_defib').checked)}手動電擊(${valBlue(document.getElementById('als_defib_cnt').value)}次/${valBlue(document.getElementById('als_defib_joule').value)}J)</span><br>
-              給藥: ${valBlue([document.getElementById('med_n1').value, document.getElementById('med_d1').value].filter(Boolean).join(' ') || '無')} | 醫師核簽: ${valBlue(document.getElementById('als_doc_sign').value)}
-            </td>
-          </tr>
+            <tr>
+              <td style="font-weight:bold;">住址</td>
+              <td colspan="5">
+                ${valBlue(addrCity ? addrCity : '')}${valBlue(addrDist ? addrDist : '')}${valBlue(addrVil ? addrVil : '')}${valBlue(addrNei ? addrNei + '鄰' : '')}${valBlue(addrRoad ? addrRoad : '')}${valBlue(addrSec ? addrSec + '段' : '')}${valBlue(addrLane ? addrLane + '巷' : '')}${valBlue(addrAlly ? addrAlly + '弄' : '')}${valBlue(addrNo ? addrNo + '號' : '')}${valBlue(addrFl ? addrFl + '樓' : '')}
+                (${chk(addrSame)}同發生地點)
+              </td>
+              <td colspan="7" style="font-size:9px; background:#f8fafc;">
+                <b>ALS 處置：</b>${chk(document.getElementById('als_ett').checked)}氣管內管(${valBlue(document.getElementById('als_ett_no').value)}號/fix:${valBlue(document.getElementById('als_ett_fix').value)}cm)
+                <span class="chk-item">${chk(document.getElementById('als_defib').checked)}手動電擊(${valBlue(document.getElementById('als_defib_cnt').value)}次/${valBlue(document.getElementById('als_defib_joule').value)}J)</span><br>
+                給藥: ${valBlue([document.getElementById('med_n1').value, document.getElementById('med_d1').value].filter(Boolean).join(' ') || '無')} | 醫師核簽: ${valBlue(document.getElementById('als_doc_sign').value)}
+              </td>
+            </tr>
 
-          <!-- 3. 現場狀況 (左 50%) 與 專項重大傷病登錄 (右 50%) -->
-          <tr style="background:#f1f5f9; text-align:center; font-weight:bold;">
-            <td colspan="6" style="width:50%;">現場狀況 (此欄可複選)</td>
-            <td colspan="7" style="width:50%;">專項重大傷病登錄</td>
-          </tr>
+            <!-- 3. 現場狀況 (左 50%) 與 專項重大傷病登錄 (右 50%) -->
+            <tr style="background:#f1f5f9; text-align:center; font-weight:bold;">
+              <td colspan="6" style="width:50%;">現場狀況 (此欄可複選)</td>
+              <td colspan="7" style="width:50%;">專項重大傷病登錄</td>
+            </tr>
 
-          <tr>
-            <td colspan="6" style="font-size:9px; vertical-align:top;">
-              <b>【非創傷】</b><br>
-              急病: 
-              <span class="chk-item">${chk(stNt.includes('呼吸問題(喘/呼吸急促)'))}呼吸問題(喘/急促)</span>
-              <span class="chk-item">${chk(stNt.includes('呼吸道問題(異物哽塞)'))}呼吸道問題(異物哽塞)</span>
-              <span class="chk-item">${chk(stNt.includes('昏迷(意識不清)'))}昏迷(意識不清)</span>
-              <span class="chk-item">${chk(stNt.includes('胸痛/胸悶'))}胸痛/悶</span>
-              <span class="chk-item">${chk(stNt.includes('腹痛'))}腹痛</span><br>
-              一般疾病:
-              <span class="chk-item">${chk(stNt.includes('頭痛/頭暈/昏厥'))}頭痛/暈/昏厥</span>
-              <span class="chk-item">${chk(stNt.includes('發燒'))}發燒</span>
-              <span class="chk-item">${chk(stNt.includes('噁心/嘔吐/腹瀉'))}噁心/嘔吐/腹瀉</span>
-              <span class="chk-item">${chk(stNt.includes('肢體無力'))}肢體無力</span><br>
-              <span class="chk-item">${chk(stNt.includes('疑似毒藥物中毒'))}疑似毒藥物中毒</span>
-              <span class="chk-item">${chk(stNt.includes('疑似一氧化碳中毒'))}疑似一氧化碳中毒</span>
-              <span class="chk-item">${chk(stNt.includes('癲癇/抽搐'))}癲癇/抽搐</span>
-              <span class="chk-item">${chk(stNt.includes('路倒'))}路倒</span>
-              <span class="chk-item">${chk(stNt.includes('行為急症/精神異常'))}行為急症/精神異常</span>
-              <span class="chk-item">${chk(stNt.includes('孕婦急產'))}孕婦急產</span>
-              <span class="chk-item">${chk(stNt.includes('溺水'))}溺水</span>
-              <span class="chk-item">${chk(stNt.includes('到院前心肺功能停止'))}到院前心肺功能停止</span>
-              <span class="chk-item">其他: ${valBlue(document.getElementById('st_nt_other').value)}</span><br>
-              <hr style="margin:2px 0;">
-              <b>【創傷】</b><br>
-              一般外傷: 
-              <span class="chk-item">${chk(stTm.includes('頭部外傷'))}頭部外傷</span>
-              <span class="chk-item">${chk(stTm.includes('胸部外傷'))}胸部外傷</span>
-              <span class="chk-item">${chk(stTm.includes('腹部外傷'))}腹部外傷</span>
-              <span class="chk-item">${chk(stTm.includes('背部外傷'))}背部外傷</span>
-              <span class="chk-item">${chk(stTm.includes('肢體外傷'))}肢體外傷</span><br>
-              <span class="chk-item">${chk(stTm.includes('溺水'))}溺水</span>
-              <span class="chk-item">${chk(stTm.includes('摔跌傷'))}摔跌傷</span>
-              <span class="chk-item">${chk(document.getElementById('st_tm_fall').checked)}墜落傷(約 ${valBlue(document.getElementById('st_tm_fall_m').value)} 公尺)</span>
-              <span class="chk-item">${chk(document.getElementById('st_tm_burn').checked)}燒燙傷(${valBlue(document.getElementById('st_tm_burn_deg').value)}度/${valBlue(document.getElementById('st_tm_burn_pct').value)}%)</span>
-              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="trauma_type"]:checked')).map(c=>c.value).includes('穿刺傷'))}穿刺傷</span>
-              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="trauma_type"]:checked')).map(c=>c.value).includes('電擊傷'))}電擊傷</span>
-              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="trauma_type"]:checked')).map(c=>c.value).includes('生物咬螫傷'))}生物咬傷</span>
-              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="trauma_type"]:checked')).map(c=>c.value).includes('創傷OHCA'))}到院前心肺功能停止</span>
-              <span class="chk-item">其他: ${valBlue(document.getElementById('st_tm_other').value)}</span><br>
-              受傷機轉: 
-              <span class="chk-item">${chk(document.querySelector('input[name="mech_traffic"]:checked')?.value === '因交通事故')}因交通事故</span>
-              <span class="chk-item">${chk(document.querySelector('input[name="mech_traffic"]:checked')?.value === '非交通事故')}非交通事故</span>
-              ( 事故類別: <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="mech_vehicle"]:checked')).map(c=>c.value).includes('汽車'))}汽車</span>
-              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="mech_vehicle"]:checked')).map(c=>c.value).includes('機車'))}機車</span>
-              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="mech_vehicle"]:checked')).map(c=>c.value).includes('腳踏車'))}腳踏車</span>
-              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="mech_vehicle"]:checked')).map(c=>c.value).includes('行人'))}行人</span>
-              <span class="chk-item">其他: ${valBlue(document.getElementById('mech_veh_other').value)}</span> )
+            <tr>
+              <td colspan="6" style="font-size:9px; vertical-align:top;">
+                <b>【非創傷】</b><br>
+                急病: 
+                <span class="chk-item">${chk(stNt.includes('呼吸問題(喘/呼吸急促)'))}呼吸問題(喘/急促)</span>
+                <span class="chk-item">${chk(stNt.includes('呼吸道問題(異物哽塞)'))}呼吸道問題(異物哽塞)</span>
+                <span class="chk-item">${chk(stNt.includes('昏迷(意識不清)'))}昏迷(意識不清)</span>
+                <span class="chk-item">${chk(stNt.includes('胸痛/胸悶'))}胸痛/悶</span>
+                <span class="chk-item">${chk(stNt.includes('腹痛'))}腹痛</span><br>
+                一般疾病:
+                <span class="chk-item">${chk(stNt.includes('頭痛/頭暈/昏厥'))}頭痛/暈/昏厥</span>
+                <span class="chk-item">${chk(stNt.includes('發燒'))}發燒</span>
+                <span class="chk-item">${chk(stNt.includes('噁心/嘔吐/腹瀉'))}噁心/嘔吐/腹瀉</span>
+                <span class="chk-item">${chk(stNt.includes('肢體無力'))}肢體無力</span><br>
+                <span class="chk-item">${chk(stNt.includes('疑似毒藥物中毒'))}疑似毒藥物中毒</span>
+                <span class="chk-item">${chk(stNt.includes('疑似一氧化碳中毒'))}疑似一氧化碳中毒</span>
+                <span class="chk-item">${chk(stNt.includes('癲癇/抽搐'))}癲癇/抽搐</span>
+                <span class="chk-item">${chk(stNt.includes('路倒'))}路倒</span>
+                <span class="chk-item">${chk(stNt.includes('行為急症/精神異常'))}行為急症/精神異常</span>
+                <span class="chk-item">${chk(stNt.includes('孕婦急產'))}孕婦急產</span>
+                <span class="chk-item">${chk(stNt.includes('溺水'))}溺水</span>
+                <span class="chk-item">${chk(stNt.includes('到院前心肺功能停止'))}到院前心肺功能停止</span>
+                <span class="chk-item">其他: ${valBlue(document.getElementById('st_nt_other').value)}</span><br>
+                <hr style="margin:2px 0;">
+                <b>【創傷】</b><br>
+                一般外傷: 
+                <span class="chk-item">${chk(stTm.includes('頭部外傷'))}頭部外傷</span>
+                <span class="chk-item">${chk(stTm.includes('胸部外傷'))}胸部外傷</span>
+                <span class="chk-item">${chk(stTm.includes('腹部外傷'))}腹部外傷</span>
+                <span class="chk-item">${chk(stTm.includes('背部外傷'))}背部外傷</span>
+                <span class="chk-item">${chk(stTm.includes('肢體外傷'))}肢體外傷</span><br>
+                <span class="chk-item">${chk(stTm.includes('溺水'))}溺水</span>
+                <span class="chk-item">${chk(stTm.includes('摔跌傷'))}摔跌傷</span>
+                <span class="chk-item">${chk(document.getElementById('st_tm_fall').checked)}墜落傷(約 ${valBlue(document.getElementById('st_tm_fall_m').value)} 公尺)</span>
+                <span class="chk-item">${chk(document.getElementById('st_tm_burn').checked)}燒燙傷(${valBlue(document.getElementById('st_tm_burn_deg').value)}度/${valBlue(document.getElementById('st_tm_burn_pct').value)}%)</span>
+                <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="trauma_type"]:checked')).map(c=>c.value).includes('穿刺傷'))}穿刺傷</span>
+                <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="trauma_type"]:checked')).map(c=>c.value).includes('電擊傷'))}電擊傷</span>
+                <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="trauma_type"]:checked')).map(c=>c.value).includes('生物咬螫傷'))}生物咬傷</span>
+                <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="trauma_type"]:checked')).map(c=>c.value).includes('創傷OHCA'))}到院前心肺功能停止</span>
+                <span class="chk-item">其他: ${valBlue(document.getElementById('st_tm_other').value)}</span><br>
+                受傷機轉: 
+                <span class="chk-item">${chk(document.querySelector('input[name="mech_traffic"]:checked')?.value === '因交通事故')}因交通事故</span>
+                <span class="chk-item">${chk(document.querySelector('input[name="mech_traffic"]:checked')?.value === '非交通事故')}非交通事故</span>
+                ( 事故類別: <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="mech_vehicle"]:checked')).map(c=>c.value).includes('汽車'))}汽車</span>
+                <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="mech_vehicle"]:checked')).map(c=>c.value).includes('機車'))}機車</span>
+                <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="mech_vehicle"]:checked')).map(c=>c.value).includes('腳踏車'))}腳踏車</span>
+                <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="mech_vehicle"]:checked')).map(c=>c.value).includes('行人'))}行人</span>
+                <span class="chk-item">其他: ${valBlue(document.getElementById('mech_veh_other').value)}</span> )
             </td>
             <td colspan="7" style="font-size:9px; vertical-align:top;">
               <b>【心肺功能停止登錄 (OHCA)】</b><br>
@@ -1589,11 +1554,33 @@
           <span>本表送交保存之單位及份數，請各消防機關依緊急醫療救護法第34條規定及轄區現況，自行決定之。</span>
           <span style="font-weight:bold; color:#000;">該表格為內政部消防署緊急救護紀錄表格式</span>
         </div>
+        </body>
+        </html>
       `;
 
-      setTimeout(() => {
-        window.print();
-      }, 100);
+      // 建立動態沙盒 Iframe，徹底隔離並強制鎖定 A4 橫向列印
+      var oldFrame = document.getElementById('print_sandbox_frame');
+      if (oldFrame) oldFrame.remove();
+
+      var printFrame = document.createElement('iframe');
+      printFrame.id = 'print_sandbox_frame';
+      printFrame.style.position = 'fixed';
+      printFrame.style.right = '0';
+      printFrame.style.bottom = '0';
+      printFrame.style.width = '0';
+      printFrame.style.height = '0';
+      printFrame.style.border = '0';
+      document.body.appendChild(printFrame);
+
+      var doc = printFrame.contentWindow.document;
+      doc.open();
+      doc.write(htmlContent);
+      doc.close();
+
+      setTimeout(function() {
+        printFrame.contentWindow.focus();
+        printFrame.contentWindow.print();
+      }, 300);
     }
 
     // ==========================================
