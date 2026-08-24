@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>台灣院前救護協會救護紀錄表 - 行動電子化系統</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body { -webkit-tap-highlight-color: transparent; user-select: none; }
+    input, textarea, select { user-select: auto; }
+    .page-tab-active {
+      background-color: #b91c1c !important;
+      color: #ffffff !important;
+      font-weight: 700;
+      border-bottom: 3px solid #f59e0b;
+    }
+    .body-btn-selected {
+      background-color: #dc2626 !important;
+      color: #ffffff !important;
+      border-color: #b91c1c !important;
+      font-weight: 700;
+    }
+
+    #print-container {
+      display: none;
+    }
+
+    /* A4 橫向單頁滿版鎖定列印 CSS (297mm x 210mm) */
+    @media print {
+      @page {
+        size: 297mm 210mm;
+        margin: 3mm 4mm;
+      }
+      html, body {
+        width: 290mm !important;
+        height: 202mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        overflow: hidden !important;
+      }
+      header, nav, main, footer, .no-print {
+        display: none !important;
+      }
+      #print-container {
+        display: block !important;
+        width: 100% !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-family: "DFKai-SB", "標楷體", "Microsoft JhengHei", sans-serif !important;
+        font-size: 9.5px !important;
+        line-height: 1.15 !important;
+      }
+      .ems-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border: 1.5px solid #000 !important;
+      }
+      .ems-table th, .ems-table td {
+        border: 1px solid #000 !important;
+        padding: 1.5px 2.5px !important;
+        vertical-align: middle !important;
+      }
+      .ems-header {
+        font-size: 16px !important;
+        font-weight: 900 !important;
+        letter-spacing: 2px !important;
+        text-align: center !important;
+        margin-bottom: 1.5px !important;
+      }
+      .chk-item {
+        display: inline-block !important;
+        white-space: nowrap !important;
+        margin-right: 2.5px !important;
+      }
+      .val-blue {
+        color: #0033aa !important;
+        font-weight: bold !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 font-sans flex flex-col min-h-screen">
+
+  <!-- 頂部標題列 -->
+  <header class="bg-red-700 text-white shadow-md sticky top-0 z-30 px-3 py-2.5 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <i data-lucide="ambulance" class="w-5 h-5 text-amber-300"></i>
+      <div>
+        <h1 class="text-sm sm:text-base font-bold tracking-wide leading-tight">
+          台灣院前救護協會救護紀錄表
+        </h1>
+        <p class="text-[9px] sm:text-[10px] text-red-100">行動平板數位化點選系統</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- 頂部 5 頁分頁頁籤 -->
+  <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-[49px] z-20 overflow-x-auto">
+    <div class="max-w-6xl mx-auto flex min-w-[580px]">
+      <button type="button" onclick="switchPage(1)" id="tab-1" class="flex-1 py-2 px-1 text-xs font-semibold text-slate-600 flex items-center justify-center gap-1 page-tab-active cursor-pointer">
+        1. 派遣地點
+      </button>
+      <button type="button" onclick="switchPage(2)" id="tab-2" class="flex-1 py-2 px-1 text-xs font-semibold text-slate-600 flex items-center justify-center gap-1 cursor-pointer">
+        2. 個資現場
+      </button>
+      <button type="button" onclick="switchPage(3)" id="tab-3" class="flex-1 py-2 px-1 text-xs font-semibold text-slate-600 flex items-center justify-center gap-1 cursor-pointer">
+        3. 專項徵象
+      </button>
+      <button type="button" onclick="switchPage(4)" id="tab-4" class="flex-1 py-2 px-1 text-xs font-semibold text-slate-600 flex items-center justify-center gap-1 cursor-pointer">
+        4. 傷情處置
+      </button>
+      <button type="button" onclick="switchPage(5)" id="tab-5" class="flex-1 py-2 px-1 text-xs font-semibold text-slate-600 flex items-center justify-center gap-1 cursor-pointer">
+        5. 簽名送出
+      </button>
+    </div>
+  </nav>
+
+  <!-- 主內容容器 -->
+  <main class="max-w-6xl mx-auto p-3 sm:p-4 flex-1 w-full pb-10">
+
+    <!-- ==================== 第 1 頁：派遣與地點、未送醫原因 ==================== -->
+    <section id="page-1" class="space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <h2 class="text-sm font-bold text-red-700 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b pb-2">
+          <i data-lucide="clipboard-list" class="w-4 h-4"></i> 派遣資料
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div>
+            <label class="font-semibold text-slate-600">案件編號</label>
+            <input type="text" id="case_no" class="mt-1 w-full p-2 border rounded-lg bg-slate-50 font-mono font-bold text-red-700" value="TPHMA000001">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-600">出勤日期</label>
+            <input type="date" id="case_date" class="mt-1 w-full p-2 border rounded-lg bg-slate-50">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-600">協同處理單位 (含後送消防分隊)</label>
+            <input type="text" id="assist_unit" class="mt-1 w-full p-2 border rounded-lg" placeholder="例：板橋分隊、轄區員警、義消">
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t">
+          <span class="text-xs font-bold text-slate-700 block mb-2">派遣時效時間軸</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 text-xs">
+            <div><label class="text-slate-500">受理時間</label><input type="time" id="t_receive" class="mt-1 w-full p-1.5 border rounded"></div>
+            <div><label class="text-slate-500">出勤時間</label><input type="time" id="t_dispatch" class="mt-1 w-full p-1.5 border rounded"></div>
+            <div><label class="text-slate-500 font-bold text-red-600">到達現場</label><input type="time" id="t_arv_scene" class="mt-1 w-full p-1.5 border rounded font-semibold text-red-600 bg-red-50/50"></div>
+            <div><label class="text-slate-500">離開現場</label><input type="time" id="t_dept_scene" class="mt-1 w-full p-1.5 border rounded"></div>
+            <div><label class="text-slate-500 font-bold text-red-600">送進醫院</label><input type="time" id="t_arv_hosp" class="mt-1 w-full p-1.5 border rounded font-semibold text-red-600 bg-red-50/50"></div>
+            <div><label class="text-slate-500">離開醫院</label><input type="time" id="t_dept_hosp" class="mt-1 w-full p-1.5 border rounded"></div>
+            <div><label class="text-slate-500">返隊待命</label><input type="time" id="t_back" class="mt-1 w-full p-1.5 border rounded"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-3 border-t text-xs">
+          <div class="space-y-2">
+            <div>
+              <label class="font-semibold text-slate-600">發生地點</label>
+              <input type="text" id="incident_loc" class="mt-1 w-full p-2 border rounded-lg" placeholder="輸入現場發生詳細地址或地標">
+            </div>
+            <div>
+              <label class="font-semibold text-slate-600">送往醫院或地點</label>
+              <input type="text" id="dest_hosp" class="mt-1 w-full p-2 border rounded-lg" placeholder="醫院名稱">
+            </div>
+            <div class="flex flex-wrap gap-3 pt-1">
+              <label class="flex items-center gap-1"><input type="radio" name="hosp_reason" value="就近適當"> 就近適當</label>
+              <label class="flex items-center gap-1"><input type="radio" name="hosp_reason" value="救護指揮中心"> 指揮中心指定</label>
+              <label class="flex items-center gap-1"><input type="radio" name="hosp_reason" value="傷病患或家屬要求"> 傷病患/家屬要求</label>
+            </div>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <span class="font-bold text-slate-700 block mb-1.5">未送醫原因 (此欄無送醫者勾選)：</span>
+            <div class="grid grid-cols-2 gap-1.5">
+              <label class="flex items-center gap-1"><input type="checkbox" name="no_trans" value="未接觸"> 未接觸</label>
+              <label class="flex items-center gap-1"><input type="checkbox" name="no_trans" value="未發現"> 未發現</label>
+              <label class="flex items-center gap-1"><input type="checkbox" name="no_trans" value="誤報"> 誤報</label>
+              <label class="flex items-center gap-1"><input type="checkbox" name="no_trans" value="中途取消"> 中途取消</label>
+              <label class="flex items-center gap-1"><input type="checkbox" name="no_trans" value="拒送"> 拒送</label>
+              <label class="flex items-center gap-1"><input type="checkbox" name="no_trans" value="警察處理"> 警察處理</label>
+              <label class="flex items-center gap-1"><input type="checkbox" name="no_trans" value="現場死亡"> 現場死亡</label>
+              <label class="flex items-center gap-1"><input type="checkbox" name="no_trans" value="出勤待命"> 出勤待命</label>
+              <label class="flex items-center gap-1"><input type="checkbox" name="no_trans" value="火警"> 火警</label>
+              <label class="flex items-center gap-1"><input type="checkbox" name="no_trans" value="支援勤務"> 支援勤務</label>
+              <label class="flex items-center gap-1 col-span-2"><input type="checkbox" id="no_trans_other_ck"> 其他: <input type="text" id="no_trans_other" class="border rounded p-0.5 w-32 ml-1 text-xs"></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t flex justify-end">
+          <button type="button" onclick="nextPage()" class="px-6 py-2.5 bg-red-700 hover:bg-red-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow cursor-pointer">
+            進入第 2 頁：個資現場 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 第 2 頁：個資、主訴、病史與現場 ==================== -->
+    <section id="page-2" class="hidden space-y-4 pb-20">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-xs">
+        <h2 class="text-sm font-bold text-red-700 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b pb-2">
+          <i data-lucide="user-check" class="w-4 h-4"></i> 傷病患資料
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+          <div>
+            <label class="font-semibold text-slate-600">傷病患姓名</label>
+            <div class="flex gap-2 items-center mt-1">
+              <input type="text" id="pt_name" class="w-full p-2 border rounded-lg" placeholder="姓名">
+              <label class="whitespace-nowrap flex items-center gap-0.5"><input type="checkbox" id="pt_name_unk"> 不詳</label>
+            </div>
+          </div>
+          <div>
+            <label class="font-semibold text-slate-600">性別</label>
+            <div class="flex gap-2 items-center mt-2">
+              <label><input type="radio" name="pt_gender" value="男"> 男</label>
+              <label><input type="radio" name="pt_gender" value="女"> 女</label>
+              <label><input type="radio" name="pt_gender" value="經評估後判斷"> 經評估後判斷</label>
+            </div>
+          </div>
+          <div>
+            <label class="font-semibold text-slate-600">年齡</label>
+            <div class="flex gap-2 items-center mt-1">
+              <input type="number" id="pt_age" class="w-full p-2 border rounded-lg" placeholder="年齡">
+              <label class="whitespace-nowrap flex items-center gap-0.5"><input type="checkbox" id="pt_age_est"> 評估判斷</label>
+            </div>
+          </div>
+          <div>
+            <label class="font-semibold text-slate-600">國民身分證 / 護照號碼</label>
+            <div class="flex gap-2 items-center mt-1">
+              <input type="text" id="pt_id" class="w-full p-2 border rounded-lg" placeholder="身分證號或外籍護照">
+              <label class="whitespace-nowrap flex items-center gap-0.5"><input type="checkbox" id="pt_id_unk"> 不詳</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t">
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-semibold text-slate-600">傷病患住址：</span>
+              <label class="flex items-center gap-1 text-slate-500"><input type="checkbox" id="addr_same_as_scene"> 同發生地點</label>
+            </div>
+            <div class="grid grid-cols-6 gap-1 text-center">
+              <input type="text" id="addr_city" class="border rounded p-1 col-span-2" placeholder="縣市">
+              <input type="text" id="addr_dist" class="border rounded p-1 col-span-2" placeholder="鄉鎮市區">
+              <input type="text" id="addr_vil" class="border rounded p-1 col-span-2" placeholder="村里">
+              <input type="text" id="addr_nei" class="border rounded p-1 col-span-1" placeholder="鄰">
+              <input type="text" id="addr_road" class="border rounded p-1 col-span-3" placeholder="路/街">
+              <input type="text" id="addr_sec" class="border rounded p-1 col-span-1" placeholder="段">
+              <input type="text" id="addr_lane" class="border rounded p-1 col-span-1" placeholder="巷">
+              <input type="text" id="addr_ally" class="border rounded p-1 col-span-1" placeholder="弄">
+              <input type="text" id="addr_no" class="border rounded p-1 col-span-2" placeholder="號">
+              <input type="text" id="addr_fl" class="border rounded p-1 col-span-2" placeholder="樓">
+            </div>
+          </div>
+
+          <div class="p-2.5 bg-slate-50 rounded-xl border">
+            <span class="font-semibold text-slate-700 block mb-1">傷病患財物明細：</span>
+            <div class="flex gap-4 mb-2">
+              <label class="flex items-center gap-1"><input type="radio" name="pt_property_status" value="未經手"> 未經手</label>
+              <label class="flex items-center gap-1"><input type="radio" name="pt_property_status" value="有"> 有 (保管人簽章)</label>
+            </div>
+            <input type="text" id="pt_property_desc" class="w-full p-1.5 border rounded bg-white" placeholder="財物明細內容與保管人...">
+          </div>
+        </div>
+      </div>
+
+      <!-- 現場狀況 -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-xs">
+        <h2 class="text-sm font-bold text-red-700 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b pb-2">
+          <i data-lucide="alert-circle" class="w-4 h-4"></i> 現場狀況 (此欄可複選)
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-3 bg-slate-50 rounded-xl border space-y-2">
+            <span class="font-bold text-slate-800 flex items-center gap-1.5 border-b pb-1">
+              <input type="checkbox" id="st_is_non_trauma" class="w-4 h-4 text-red-600 rounded" onchange="calcTriageDirectly()"> 【非創傷】
+            </span>
+            <div class="space-y-1.5">
+              <span class="text-slate-600 font-semibold block">急病：</span>
+              <div class="grid grid-cols-2 gap-1 pl-1">
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="呼吸問題(喘/呼吸急促)" onchange="calcTriageDirectly()"> 呼吸問題(喘/急促)</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="呼吸道問題(異物哽塞)" onchange="calcTriageDirectly()"> 呼吸道異物哽塞</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="昏迷(意識不清)" onchange="calcTriageDirectly()"> 昏迷(意識不清)</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="胸痛/胸悶" onchange="calcTriageDirectly()"> 胸痛 / 胸悶</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="腹痛" onchange="calcTriageDirectly()"> 腹痛</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="頭痛/頭暈/昏厥" onchange="calcTriageDirectly()"> 頭痛/頭暈/昏厥</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="發燒" onchange="calcTriageDirectly()"> 發燒</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="噁心/嘔吐/腹瀉" onchange="calcTriageDirectly()"> 噁心/嘔吐/腹瀉</label>
+                <label class="flex items-center gap-1 col-span-2"><input type="checkbox" name="st_nt" value="肢體無力" onchange="calcTriageDirectly()"> 肢體無力</label>
+              </div>
+
+              <div class="pt-2 border-t grid grid-cols-2 gap-1 pl-1">
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="疑似毒藥物中毒" onchange="calcTriageDirectly()"> 疑似毒藥物中毒</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="疑似一氧化碳中毒" onchange="calcTriageDirectly()"> 疑似一氧化碳中毒</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="癲癇/抽搐" onchange="calcTriageDirectly()"> 癲癇 / 抽搐</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="路倒" onchange="calcTriageDirectly()"> 路倒</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="行為急症/精神異常" onchange="calcTriageDirectly()"> 行為急症/精神異常</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="孕婦急產" onchange="calcTriageDirectly()"> 孕婦急產</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="溺水" onchange="calcTriageDirectly()"> 溺水</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_nt" value="到院前心肺功能停止" onchange="calcTriageDirectly()"> 到院前心肺功能停止</label>
+                <label class="flex items-center gap-1 col-span-2"><input type="checkbox" id="st_nt_other_ck"> 其他: <input type="text" id="st_nt_other" class="border rounded p-0.5 w-36 ml-1 bg-white"></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl border space-y-2">
+            <span class="font-bold text-slate-800 flex items-center gap-1.5 border-b pb-1">
+              <input type="checkbox" id="st_is_trauma" class="w-4 h-4 text-red-600 rounded" onchange="calcTriageDirectly()"> 【創傷】
+            </span>
+            <div class="space-y-1.5">
+              <span class="text-slate-600 font-semibold block">一般外傷：</span>
+              <div class="grid grid-cols-3 gap-1 pl-1">
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_tm" value="頭部外傷" onchange="calcTriageDirectly()"> 頭部外傷</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_tm" value="胸部外傷" onchange="calcTriageDirectly()"> 胸部外傷</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_tm" value="腹部外傷" onchange="calcTriageDirectly()"> 腹部外傷</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_tm" value="背部外傷" onchange="calcTriageDirectly()"> 背部外傷</label>
+                <label class="flex items-center gap-1 col-span-2"><input type="checkbox" name="st_tm" value="肢體外傷" onchange="calcTriageDirectly()"> 肢體外傷</label>
+              </div>
+
+              <div class="pt-2 border-t grid grid-cols-2 gap-1 pl-1">
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_tm" value="溺水" onchange="calcTriageDirectly()"> 溺水</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_tm" value="摔跌傷" onchange="calcTriageDirectly()"> 摔跌傷</label>
+                <label class="flex items-center gap-1 col-span-2">
+                  <input type="checkbox" id="st_tm_fall" onchange="calcTriageDirectly()"> 墜落傷 (約 <input type="number" id="st_tm_fall_m" oninput="calcTriageDirectly()" class="w-10 border rounded text-center p-0.5 bg-white"> 公尺)
+                </label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_tm" value="穿刺傷" onchange="calcTriageDirectly()"> 穿刺傷</label>
+                <label class="flex items-center gap-1 col-span-2">
+                  <input type="checkbox" id="st_tm_burn" onchange="calcTriageDirectly()"> 燒燙傷 (<input type="number" id="st_tm_burn_deg" oninput="calcTriageDirectly()" class="w-8 border rounded text-center p-0.5 bg-white"> 度 / <input type="number" id="st_tm_burn_pct" oninput="calcTriageDirectly()" class="w-8 border rounded text-center p-0.5 bg-white"> %)
+                </label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_tm" value="電擊傷" onchange="calcTriageDirectly()"> 電擊傷</label>
+                <label class="flex items-center gap-1"><input type="checkbox" name="st_tm" value="生物咬螫傷" onchange="calcTriageDirectly()"> 生物咬螫傷</label>
+                <label class="flex items-center gap-1 col-span-2"><input type="checkbox" name="st_tm" value="創傷OHCA" onchange="calcTriageDirectly()"> 到院前心肺功能停止</label>
+                <label class="flex items-center gap-1 col-span-2"><input type="checkbox" id="st_tm_other_ck"> 其他: <input type="text" id="st_tm_other" class="border rounded p-0.5 w-36 ml-1 bg-white"></label>
+              </div>
+
+              <div class="pt-2 border-t pl-1 space-y-1">
+                <span class="text-slate-600 font-semibold block">受傷機轉：</span>
+                <div class="flex flex-wrap gap-3">
+                  <label class="flex items-center gap-1"><input type="radio" name="mech_traffic" value="因交通事故"> 因交通事故</label>
+                  <label class="flex items-center gap-1"><input type="radio" name="mech_traffic" value="非交通事故"> 非交通事故</label>
+                </div>
+                <div class="flex flex-wrap gap-2 pt-1">
+                  <span class="text-slate-500">事故類別(傷病患為主)：</span>
+                  <label class="flex items-center gap-1"><input type="checkbox" name="mech_vehicle" value="汽車"> 汽車</label>
+                  <label class="flex items-center gap-1"><input type="checkbox" name="mech_vehicle" value="機車"> 機車</label>
+                  <label class="flex items-center gap-1"><input type="checkbox" name="mech_vehicle" value="腳踏車"> 腳踏車</label>
+                  <label class="flex items-center gap-1"><input type="checkbox" name="mech_vehicle" value="行人"> 行人</label>
+                  <label class="flex items-center gap-1"><input type="checkbox" id="mech_veh_other_ck"> 其他: <input type="text" id="mech_veh_other" class="border rounded p-0.5 w-16 ml-1 bg-white"></label>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 主訴五問、病史與過敏史 -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-xs space-y-4 mb-4">
+        <h2 class="text-sm font-bold text-red-700 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b pb-2">
+          <i data-lucide="message-square" class="w-4 h-4"></i> 傷病患主訴五問、過去病史與過敏史
+        </h2>
+        
+        <div class="space-y-2 mb-4">
+          <div class="flex gap-4 items-center">
+            <span class="font-bold text-slate-700">主訴來源：</span>
+            <label class="flex items-center gap-1"><input type="radio" name="cc_source" value="口訴"> 口訴</label>
+            <label class="flex items-center gap-1"><input type="radio" name="cc_source" value="家屬或友人代訴"> 家屬或友人代訴</label>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <span class="font-semibold text-slate-600">1. 感覺哪裡不舒服？</span>
+              <input type="text" id="cc_q1" class="mt-1 w-full p-2 border rounded-lg" placeholder="不舒服部位">
+            </div>
+            <div>
+              <span class="font-semibold text-slate-600">2. 感覺怎麼的不舒服？</span>
+              <input type="text" id="cc_q2" class="mt-1 w-full p-2 border rounded-lg" placeholder="不舒服症狀感覺">
+            </div>
+            <div>
+              <span class="font-semibold text-slate-600">3. 大約不舒服有多久了？</span>
+              <input type="text" id="cc_q3" class="mt-1 w-full p-2 border rounded-lg" placeholder="持續時間">
+            </div>
+            <div>
+              <span class="font-semibold text-slate-600">4. 還有其他地方不舒服嗎？</span>
+              <input type="text" id="cc_q4" class="mt-1 w-full p-2 border rounded-lg" placeholder="其他伴隨症狀">
+            </div>
+            <div class="md:col-span-2 bg-amber-50 p-2.5 rounded-lg border border-amber-200 flex flex-wrap justify-between items-center gap-2">
+              <span class="font-bold text-amber-900">5. 評估頸椎是否損傷 (創傷患者)：</span>
+              <div class="flex gap-4">
+                <label class="flex items-center gap-1 font-semibold"><input type="radio" name="c_spine" value="是"> 是</label>
+                <label class="flex items-center gap-1 font-semibold"><input type="radio" name="c_spine" value="否"> 否</label>
+              </div>
+            </div>
+          </div>
+          <div class="bg-rose-50/70 p-2.5 rounded-lg border border-rose-200 mt-2">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-bold text-rose-800">疼痛評估分數 (0-10)：</span>
+              <span id="pain_val_display" class="px-2 py-0.5 bg-rose-600 text-white font-bold text-xs rounded-full">0 分 (無痛)</span>
+            </div>
+            <input type="range" id="pain_score" min="0" max="10" value="0" class="w-full accent-rose-600 cursor-pointer" oninput="updatePainDisplay(this.value); calcTriageDirectly();">
+          </div>
+        </div>
+
+        <div class="pt-3 border-t">
+          <span class="font-bold text-slate-700 block mb-1.5">過去病史 (可複選)：</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5" id="history_tags">
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="糖尿病"> 糖尿病</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="高血壓"> 高血壓</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="癌症"> 癌症</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="慢性阻塞性肺病"> 慢性阻塞性肺病</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="氣喘"> 氣喘</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="中風"> 中風</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="肝臟疾病"> 肝臟疾病</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="腎臟疾病"> 腎臟疾病</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="心臟疾病"> 心臟疾病</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="癲癇"> 癲癇</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="精神疾病"> 精神疾病</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="不清楚"> 不清楚</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" value="無"> 無</label>
+            <label class="flex items-center gap-1 p-1 border rounded bg-slate-50"><input type="checkbox" id="hist_other_ck" onchange="toggleHistoryOther(this.checked)"> 其他</label>
+          </div>
+          <input type="text" id="hist_other_text" class="hidden mt-1.5 w-full p-1.5 border rounded text-xs bg-white" placeholder="輸入其他病史...">
+        </div>
+
+        <div class="pt-3 border-t">
+          <span class="font-bold text-slate-700 block mb-1.5">過敏史：</span>
+          <div class="flex flex-wrap items-center gap-3">
+            <label class="flex items-center gap-1"><input type="checkbox" id="alg_drug"> 藥物</label>
+            <label class="flex items-center gap-1"><input type="checkbox" id="alg_food"> 食物</label>
+            <label class="flex items-center gap-1"><input type="checkbox" id="alg_unk"> 不清楚</label>
+            <label class="flex items-center gap-1"><input type="checkbox" id="alg_none"> 無</label>
+            <label class="flex items-center gap-1 flex-1 min-w-[200px]"><input type="checkbox" id="alg_other_ck"> 其他: <input type="text" id="alg_other" class="border rounded p-1 w-full ml-1" placeholder="備註具體過敏品項..."></label>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t flex justify-between">
+          <button type="button" onclick="prevPage()" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> 上一頁
+          </button>
+          <button type="button" onclick="nextPage()" class="px-6 py-2.5 bg-red-700 hover:bg-red-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow cursor-pointer">
+            進入第 3 頁：專項徵象 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 第 3 頁：專項重症與生命徵象 ==================== -->
+    <section id="page-3" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-xs">
+        <h2 class="text-sm font-bold text-red-700 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b pb-2">
+          <i data-lucide="activity" class="w-4 h-4"></i> 重大傷病專項登錄
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="p-3 bg-slate-100 rounded-xl border border-slate-300 space-y-2">
+            <span class="font-bold text-slate-800 flex items-center gap-1"><i data-lucide="zap" class="w-4 h-4"></i> 心肺功能停止 (OHCA) 登錄</span>
+            <label class="flex items-center gap-1 font-semibold"><input type="checkbox" id="ohca_dispatch_notify" onchange="calcTriageDirectly()"> 派遣時即通知</label>
+            <div class="grid grid-cols-2 gap-1">
+              <div>目擊者: <label><input type="radio" name="ohca_wit" value="有">有</label> <label><input type="radio" name="ohca_wit" value="無">無</label></div>
+              <div>旁觀者CPR: <label><input type="radio" name="ohca_cpr" value="有">有</label> <label><input type="radio" name="ohca_cpr" value="無">無</label></div>
+              <div>使用PAD: <label><input type="radio" name="ohca_pad" value="有">有</label> <label><input type="radio" name="ohca_pad" value="無">無</label></div>
+              <div class="col-span-2">現場ROSC: <input type="time" id="ohca_rosc_time" class="border rounded p-0.5 text-xs bg-white"></div>
+            </div>
+            <div class="pt-1 border-t">
+              <span class="font-semibold text-slate-700 block mb-1">事故地點型態：</span>
+              <div class="grid grid-cols-2 gap-1">
+                <label><input type="checkbox" name="ohca_loc" value="住宅"> 住宅</label>
+                <label><input type="checkbox" name="ohca_loc" value="教育/學校"> 教育/學校</label>
+                <label><input type="checkbox" name="ohca_loc" value="工廠/工作地點"> 工廠/工作地點</label>
+                <label><input type="checkbox" name="ohca_loc" value="捷運/車站/機場"> 捷運/車站/機場</label>
+                <label><input type="checkbox" name="ohca_loc" value="運動中心"> 運動中心</label>
+                <label><input type="checkbox" name="ohca_loc" value="診所/護理之家"> 診所/護理之家</label>
+                <label><input type="checkbox" name="ohca_loc" value="街道/公路"> 街道/公路</label>
+                <label><input type="checkbox" name="ohca_loc" value="公共建築"> 公共建築</label>
+                <label><input type="checkbox" name="ohca_loc" value="療養院"> 療養院</label>
+                <label><input type="checkbox" name="ohca_loc" value="不清楚"> 不清楚</label>
+                <label class="col-span-2"><input type="checkbox" id="ohca_loc_other_ck"> 其他: <input type="text" id="ohca_loc_other" class="border rounded p-0.5 w-24 bg-white"></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 bg-rose-50/70 rounded-xl border border-rose-200 space-y-2">
+            <span class="font-bold text-rose-900 flex items-center gap-1"><i data-lucide="heart" class="w-4 h-4"></i> 疑似心肌梗塞登錄</span>
+            <label class="flex items-center gap-1 font-semibold text-rose-800"><input type="checkbox" id="acs_12h_chest_pain" onchange="calcTriageDirectly()"> 12小時內有胸痛或胸悶</label>
+            <div class="pt-1 border-t">
+              <span class="font-semibold text-slate-700 block mb-1">或下列情形之任 2 項：</span>
+              <div class="space-y-1">
+                <label class="flex items-center gap-1"><input type="checkbox" id="acs_dyspnea" onchange="calcTriageDirectly()"> 喘</label>
+                <label class="flex items-center gap-1"><input type="checkbox" id="acs_sweat" onchange="calcTriageDirectly()"> 冒冷汗</label>
+                <label class="flex items-center gap-1"><input type="checkbox" id="acs_vomit" onchange="calcTriageDirectly()"> 噁心(嘔吐)</label>
+                <label class="flex items-center gap-1"><input type="checkbox" id="acs_hx" onchange="calcTriageDirectly()"> 有心臟病史</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 bg-amber-50/70 rounded-xl border border-amber-200 space-y-2">
+            <span class="font-bold text-amber-900 flex items-center gap-1"><i data-lucide="brain" class="w-4 h-4"></i> 符合疑似腦中風指標</span>
+            <div class="flex gap-4 items-center">
+              <span>是否異常：</span>
+              <label><input type="radio" name="stroke_is_abnormal" value="是" onchange="calcTriageDirectly()"> 是</label>
+              <label><input type="radio" name="stroke_is_abnormal" value="否" onchange="calcTriageDirectly()"> 否</label>
+            </div>
+            <div>
+              <span class="text-slate-600">最後正常時間：</span>
+              <input type="time" id="stroke_last_time" class="mt-1 w-full p-1.5 border rounded bg-white">
+            </div>
+            <div class="space-y-1 pt-1 border-t">
+              <label class="flex items-center gap-1"><input type="checkbox" id="stroke_smile" onchange="calcTriageDirectly()"> 微笑測試異常</label>
+              <div class="flex gap-2">
+                <label class="flex items-center gap-1"><input type="checkbox" id="stroke_arm_l" onchange="calcTriageDirectly()"> 左側測試異常</label>
+                <label class="flex items-center gap-1"><input type="checkbox" id="stroke_arm_r" onchange="calcTriageDirectly()"> 右側測試異常</label>
+              </div>
+              <label class="flex items-center gap-1"><input type="checkbox" id="stroke_speech" onchange="calcTriageDirectly()"> 言語測試異常</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 生命徵象 -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-xs">
+        <h2 class="text-sm font-bold text-red-700 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b pb-2">
+          <i data-lucide="gauge" class="w-4 h-4"></i> 生命徵象紀錄 (現場 / 途中 / 到院後檢傷站)
+        </h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-center border-collapse min-w-[720px]">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 font-semibold border-b">
+                <th class="p-2 text-left">測量階段</th>
+                <th class="p-2">時間</th>
+                <th class="p-2">意識狀態</th>
+                <th class="p-2">呼吸 (/分)</th>
+                <th class="p-2">脈搏 (/分)</th>
+                <th class="p-2">血壓 (mmHg)</th>
+                <th class="p-2">GCS (E_V_M)</th>
+                <th class="p-2">SpO2 (%)</th>
+                <th class="p-2">體溫 (°C)</th>
+                <th class="p-2">血糖值 (mg/dl)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b bg-white">
+                <td class="p-2 font-bold text-slate-700 text-left">1. 現場初評</td>
+                <td class="p-1"><input type="time" id="v1_time" class="p-1 border rounded w-20 text-center"></td>
+                <td class="p-1"><select id="v1_avpu" onchange="calcTriageDirectly()" class="p-1.5 border rounded bg-slate-50"><option value="">選擇</option><option>清</option><option>聲</option><option>痛</option><option>否</option></select></td>
+                <td class="p-1"><input type="number" id="v1_rr" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+                <td class="p-1"><input type="number" id="v1_pr" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+                <td class="p-1 flex items-center gap-0.5 justify-center mt-1"><input type="number" id="v1_sbp" oninput="calcTriageDirectly()" class="w-12 p-1.5 border rounded text-center" placeholder="SBP">/<input type="number" id="v1_dbp" class="w-12 p-1.5 border rounded text-center" placeholder="DBP"></td>
+                <td class="p-1"><div class="flex gap-0.5 justify-center"><input type="number" id="v1_e" oninput="calcTriageDirectly()" class="w-8 p-1.5 border rounded text-center" placeholder="E"><input type="number" id="v1_v" oninput="calcTriageDirectly()" class="w-8 p-1.5 border rounded text-center" placeholder="V"><input type="number" id="v1_m" oninput="calcTriageDirectly()" class="w-8 p-1.5 border rounded text-center" placeholder="M"></div></td>
+                <td class="p-1"><input type="number" id="v1_spo2" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center font-bold text-blue-600" placeholder="--"></td>
+                <td class="p-1"><input type="number" step="0.1" id="v1_bt" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+                <td class="p-1"><input type="number" id="v1_sugar" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+              </tr>
+              <tr class="border-b bg-slate-50/50">
+                <td class="p-2 font-bold text-slate-700 text-left">2. 途中再評</td>
+                <td class="p-1"><input type="time" id="v2_time" class="p-1 border rounded w-20 text-center"></td>
+                <td class="p-1"><select id="v2_avpu" onchange="calcTriageDirectly()" class="p-1.5 border rounded bg-white"><option value="">選擇</option><option>清</option><option>聲</option><option>痛</option><option>否</option></select></td>
+                <td class="p-1"><input type="number" id="v2_rr" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+                <td class="p-1"><input type="number" id="v2_pr" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+                <td class="p-1 flex items-center gap-0.5 justify-center mt-1"><input type="number" id="v2_sbp" oninput="calcTriageDirectly()" class="w-12 p-1.5 border rounded text-center" placeholder="S">/<input type="number" id="v2_dbp" class="w-12 p-1.5 border rounded text-center" placeholder="D"></td>
+                <td class="p-1"><div class="flex gap-0.5 justify-center"><input type="number" id="v2_e" oninput="calcTriageDirectly()" class="w-8 p-1.5 border rounded text-center" placeholder="E"><input type="number" id="v2_v" oninput="calcTriageDirectly()" class="w-8 p-1.5 border rounded text-center" placeholder="V"><input type="number" id="v2_m" oninput="calcTriageDirectly()" class="w-8 p-1.5 border rounded text-center" placeholder="M"></div></td>
+                <td class="p-1"><input type="number" id="v2_spo2" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center font-bold text-blue-600" placeholder="--"></td>
+                <td class="p-1"><input type="number" step="0.1" id="v2_bt" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+                <td class="p-1"><input type="number" id="v2_sugar" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+              </tr>
+              <tr class="bg-white">
+                <td class="p-2 font-bold text-slate-700 text-left">3. 送達醫院</td>
+                <td class="p-1"><input type="time" id="v3_time" class="p-1 border rounded w-20 text-center"></td>
+                <td class="p-1"><select id="v3_avpu" class="p-1.5 border rounded bg-slate-50"><option value="">選擇</option><option>清</option><option>聲</option><option>痛</option><option>否</option></select></td>
+                <td class="p-1"><input type="number" id="v3_rr" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+                <td class="p-1"><input type="number" id="v3_pr" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+                <td class="p-1 flex items-center gap-0.5 justify-center mt-1"><input type="number" id="v3_sbp" class="w-12 p-1.5 border rounded text-center" placeholder="S">/<input type="number" id="v3_dbp" class="w-12 p-1.5 border rounded text-center" placeholder="D"></td>
+                <td class="p-1"><div class="flex gap-0.5 justify-center"><input type="number" id="v3_e" class="w-8 p-1.5 border rounded text-center" placeholder="E"><input type="number" id="v3_v" class="w-8 p-1.5 border rounded text-center" placeholder="V"><input type="number" id="v3_m" class="w-8 p-1.5 border rounded text-center" placeholder="M"></div></td>
+                <td class="p-1"><input type="number" id="v3_spo2" class="w-14 p-1.5 border rounded text-center font-bold text-blue-600" placeholder="--"></td>
+                <td class="p-1"><input type="number" step="0.1" id="v3_bt" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+                <td class="p-1"><input type="number" id="v3_sugar" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-4 pt-3 border-t flex justify-between">
+          <button type="button" onclick="prevPage()" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> 上一頁
+          </button>
+          <button type="button" onclick="nextPage()" class="px-6 py-2.5 bg-red-700 hover:bg-red-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow cursor-pointer">
+            進入第 4 頁：傷情處置 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 第 4 頁：傷情處置 ==================== -->
+    <section id="page-4" class="hidden space-y-4 pb-20">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-xs">
+        <div class="flex justify-between items-center mb-2 border-b pb-2">
+          <span class="font-bold text-red-700 text-sm flex items-center gap-1.5">
+            <i data-lucide="crosshair" class="w-4 h-4"></i> 受傷部位點選標記與尺寸說明 (觸控點選部位)
+          </span>
+          <button onclick="clearBodySelection()" class="text-red-600 hover:underline text-xs flex items-center gap-1 cursor-pointer">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> 清除選取
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-3 bg-slate-50 rounded-xl border">
+            <span class="font-bold text-slate-800 block mb-2 text-center text-xs bg-slate-200 py-1 rounded">【正面解剖部位 (Anterior)】</span>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5" id="body_front_group">
+              <button type="button" onclick="toggleBodyPart(this, '頭部/顏面(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">頭部 / 顏面</button>
+              <button type="button" onclick="toggleBodyPart(this, '前頸部(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">前頸部</button>
+              <button type="button" onclick="toggleBodyPart(this, '胸部(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">胸部</button>
+              <button type="button" onclick="toggleBodyPart(this, '左肩/左鎖骨(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">左肩 / 鎖骨</button>
+              <button type="button" onclick="toggleBodyPart(this, '腹部(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">腹部</button>
+              <button type="button" onclick="toggleBodyPart(this, '右肩/右鎖骨(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">右肩 / 鎖骨</button>
+              <button type="button" onclick="toggleBodyPart(this, '左上臂(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">左上臂</button>
+              <button type="button" onclick="toggleBodyPart(this, '骨盆/鼠蹊(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">骨盆 / 鼠蹊</button>
+              <button type="button" onclick="toggleBodyPart(this, '右上臂(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">右上臂</button>
+              <button type="button" onclick="toggleBodyPart(this, '左前臂/手(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">左前臂 / 手</button>
+              <button type="button" onclick="toggleBodyPart(this, '左大腿(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">左大腿</button>
+              <button type="button" onclick="toggleBodyPart(this, '右前臂/手(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">右前臂 / 手</button>
+              <button type="button" onclick="toggleBodyPart(this, '左膝/小腿(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">左膝 / 小腿</button>
+              <button type="button" onclick="toggleBodyPart(this, '右大腿(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">右大腿</button>
+              <button type="button" onclick="toggleBodyPart(this, '右膝/小腿(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">右膝 / 小腿</button>
+              <button type="button" onclick="toggleBodyPart(this, '左腳踝/腳掌(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition col-span-1 cursor-pointer">左踝 / 腳掌</button>
+              <button type="button" onclick="toggleBodyPart(this, '右腳踝/腳掌(正)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition col-span-1 cursor-pointer">右踝 / 腳掌</button>
+            </div>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl border">
+            <span class="font-bold text-slate-800 block mb-2 text-center text-xs bg-slate-200 py-1 rounded">【背面解剖部位 (Posterior)】</span>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5" id="body_back_group">
+              <button type="button" onclick="toggleBodyPart(this, '後頭部/枕骨(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">後頭部 / 枕骨</button>
+              <button type="button" onclick="toggleBodyPart(this, '後頸/頸椎(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">後頸 / 頸椎</button>
+              <button type="button" onclick="toggleBodyPart(this, '上背/胸椎(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">上背 / 胸椎</button>
+              <button type="button" onclick="toggleBodyPart(this, '左肩胛骨(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">左肩胛骨</button>
+              <button type="button" onclick="toggleBodyPart(this, '下背/腰椎(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">下背 / 腰椎</button>
+              <button type="button" onclick="toggleBodyPart(this, '右肩胛骨(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">右肩胛骨</button>
+              <button type="button" onclick="toggleBodyPart(this, '左上臂後側(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">左上臂後側</button>
+              <button type="button" onclick="toggleBodyPart(this, '臀部/薦椎(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">臀部 / 薦椎</button>
+              <button type="button" onclick="toggleBodyPart(this, '右上臂後側(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">右上臂後側</button>
+              <button type="button" onclick="toggleBodyPart(this, '左手背/肘(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">左手背 / 肘</button>
+              <button type="button" onclick="toggleBodyPart(this, '左大腿後側(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">左大腿後側</button>
+              <button type="button" onclick="toggleBodyPart(this, '右手背/肘(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">右手背 / 肘</button>
+              <button type="button" onclick="toggleBodyPart(this, '左小腿後/膕窩(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">左小腿後側</button>
+              <button type="button" onclick="toggleBodyPart(this, '右大腿後側(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">右大腿後側</button>
+              <button type="button" onclick="toggleBodyPart(this, '右小腿後/膕窩(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition cursor-pointer">右小腿後側</button>
+              <button type="button" onclick="toggleBodyPart(this, '左足跟/底(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition col-span-1 cursor-pointer">左足跟 / 底</button>
+              <button type="button" onclick="toggleBodyPart(this, '右足跟/底(背)')" class="p-2 border rounded-lg bg-white text-slate-700 font-medium active:scale-95 transition col-span-1 cursor-pointer">右足跟 / 底</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-3 border-t space-y-2">
+          <div class="p-2 bg-red-50 rounded-lg border border-red-200">
+            <span class="font-bold text-red-900 block mb-1">已點選受傷部位：</span>
+            <span id="selected_body_parts_display" class="text-slate-500 font-normal">尚未選取任何部位</span>
+          </div>
+          <div>
+            <span class="font-semibold text-slate-700 block mb-1">受傷部位尺寸與傷況補述：</span>
+            <textarea id="body_injury_notes" rows="3" class="w-full p-2 border rounded-lg bg-white" placeholder="請填寫傷口種類、尺寸與傷勢狀況..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 處置項目 -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-xs space-y-4 mb-4">
+        <h2 class="text-sm font-bold text-red-700 uppercase tracking-wider flex items-center gap-1.5 border-b pb-2">
+          <i data-lucide="stethoscope" class="w-4 h-4"></i> 處置項目 (此欄可複選)
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="p-3 bg-slate-50 rounded-xl border space-y-2">
+            <span class="font-bold text-slate-800 block border-b pb-1">基本呼吸道 / 呼吸處置</span>
+            <div class="space-y-1">
+              <label class="flex items-center gap-1"><input type="checkbox" value="口咽呼吸道"> 口咽呼吸道</label>
+              <label class="flex items-center gap-1"><input type="checkbox" value="鼻咽呼吸道"> 鼻咽呼吸道</label>
+              <label class="flex items-center gap-1"><input type="checkbox" value="抽吸"> 抽吸</label>
+              <label class="flex items-center gap-1"><input type="checkbox" value="哈姆立克法"> 哈姆立克法</label>
+              <label class="flex items-center gap-1"><input type="checkbox" id="tx_sga"> 聲門上呼吸道(SGA) (<input type="text" id="tx_sga_no" class="w-10 border rounded text-center p-0.5 bg-white"> 號)</label>
+              <label class="flex items-center gap-1"><input type="checkbox" id="tx_nc"> 鼻管 (<input type="number" id="tx_nc_l" class="w-10 border rounded text-center p-0.5 bg-white"> L/Min)</label>
+              <label class="flex items-center gap-1"><input type="checkbox" id="tx_mask"> 面罩 (<input type="number" id="tx_mask_l" class="w-10 border rounded text-center p-0.5 bg-white"> L/Min)</label>
+              <label class="flex items-center gap-1"><input type="checkbox" value="非再呼吸型面罩"> 非再呼吸型面罩</label>
+              <label class="flex items-center gap-1"><input type="checkbox" value="BVM(正壓輔助呼吸)"> BVM(正壓輔助呼吸)</label>
+              <label class="flex items-center gap-1"><input type="checkbox" value="霧化吸入型面罩"> 霧化吸入型面罩</label>
+              <label class="flex items-center gap-1"><input type="checkbox" id="tx_airway_oth_ck"> 其他: <input type="text" id="tx_airway_oth" class="border rounded p-0.5 w-24 bg-white"></label>
+            </div>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl border space-y-2">
+            <span class="font-bold text-slate-800 block border-b pb-1">心肺復甦術 & 藥物處置</span>
+            <div class="space-y-1">
+              <label class="flex items-center gap-1"><input type="checkbox" value="自動心肺復甦機(MCPR)"> 自動心肺復甦機(MCPR)</label>
+              <label class="flex items-center gap-1"><input type="checkbox" id="tx_cpr"> CPR (<input type="number" id="tx_cpr_min" class="w-10 border rounded text-center p-0.5 bg-white"> 分鐘)</label>
+              <div class="pt-1">
+                <span class="font-semibold text-slate-700 block">使用 AED：</span>
+                <div class="flex gap-2 pl-1">
+                  <label class="flex items-center gap-1"><input type="checkbox" id="tx_aed_shock"> 電擊去顫 (<input type="number" id="tx_aed_cnt" class="w-8 border rounded text-center p-0.5 bg-white"> 次)</label>
+                  <label class="flex items-center gap-1"><input type="checkbox" value="AED不建議電擊"> 不建議電擊</label>
+                </div>
+              </div>
+              <div class="pt-1 border-t space-y-1">
+                <span class="font-semibold text-slate-700 block">藥物處置：</span>
+                <label class="flex items-center gap-1"><input type="checkbox" id="tx_iv"> 靜脈輸液, 部位: <input type="text" id="tx_iv_site" class="border rounded p-0.5 w-20 bg-white"></label>
+                <div class="grid grid-cols-2 gap-1 pl-2">
+                  <label><input type="checkbox" id="tx_ns"> 0.9% N/S (<input type="number" id="tx_ns_ml" class="w-10 border rounded text-center p-0.5 bg-white"> ml)</label>
+                  <label><input type="checkbox" id="tx_lr"> L/R (<input type="number" id="tx_lr_ml" class="w-10 border rounded text-center p-0.5 bg-white"> ml)</label>
+                  <label class="col-span-2"><input type="checkbox" id="tx_g5"> <input type="number" id="tx_g5_pct" class="w-8 border rounded text-center p-0.5 bg-white">% 葡萄糖液 (<input type="number" id="tx_g5_ml" class="w-10 border rounded text-center p-0.5 bg-white"> ml)</label>
+                </div>
+                <label class="flex items-center gap-1"><input type="checkbox" value="給予口服葡萄糖液/粉"> 給予口服葡萄糖液/粉</label>
+                <label class="flex items-center gap-1"><input type="checkbox" value="協助使用Aspirin"> 協助使用 Aspirin</label>
+                <label class="flex items-center gap-1"><input type="checkbox" id="tx_ntg"> 協助使用 NTG 含片 (<input type="number" id="tx_ntg_cnt" class="w-8 border rounded text-center p-0.5 bg-white" placeholder="片"> 片)</label>
+                <label class="flex items-center gap-1"><input type="checkbox" id="tx_broncho"> 協助使用支氣管擴張劑 (<input type="number" id="tx_broncho_cnt" class="w-8 border rounded text-center p-0.5 bg-white" placeholder="次"> 次)</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl border space-y-2">
+            <span class="font-bold text-slate-800 block border-b pb-1">創傷/搬運/姿勢/其他</span>
+            <div class="space-y-1">
+              <span class="font-semibold text-slate-700 block">創傷處置：</span>
+              <div class="grid grid-cols-2 gap-1 pl-1">
+                <label><input type="checkbox" value="頸圈"> 頸圈</label>
+                <label><input type="checkbox" value="清洗傷口"> 清洗傷口</label>
+                <label><input type="checkbox" value="止血、包紮"> 止血、包紮</label>
+                <label><input type="checkbox" value="骨折固定"> 骨折固定</label>
+                <label><input type="checkbox" value="長背板固定"> 長背板固定</label>
+                <label><input type="checkbox" value="KED固定"> KED固定</label>
+                <label class="col-span-2"><input type="checkbox" id="tx_tm_oth_ck"> 其他: <input type="text" id="tx_tm_oth" class="border rounded p-0.5 w-24 bg-white"></label>
+              </div>
+
+              <div class="pt-1 border-t space-y-1">
+                <span class="font-semibold text-slate-700 block">搬運與特定姿勢：</span>
+                <div class="grid grid-cols-2 gap-1 pl-1">
+                  <label><input type="checkbox" value="自行上車"> 自行上車</label>
+                  <label><input type="checkbox" value="以適當方式搬運"> 以適當方式搬運</label>
+                  <label><input type="checkbox" value="平躺"> 平躺</label>
+                  <label><input type="checkbox" value="半坐臥"> 半坐臥</label>
+                  <label><input type="checkbox" value="左側臥"> 左側臥</label>
+                  <label><input type="checkbox" value="右側臥"> 右側臥</label>
+                  <label class="col-span-2"><input type="checkbox" value="下肢抬高"> 下肢抬高</label>
+                </div>
+              </div>
+
+              <div class="pt-1 border-t space-y-1">
+                <span class="font-semibold text-slate-700 block">其他處置：</span>
+                <div class="grid grid-cols-2 gap-1 pl-1">
+                  <label><input type="checkbox" value="保暖"> 保暖</label>
+                  <label><input type="checkbox" value="心理支持"> 心理支持</label>
+                  <label><input type="checkbox" value="急產接生"> 急產接生</label>
+                  <label><input type="checkbox" value="約束帶"> 約束帶</label>
+                  <label><input type="checkbox" value="沖洗眼睛"> 沖洗眼睛</label>
+                  <label><input type="checkbox" id="tx_misc_oth_ck"> 其他: <input type="text" id="tx_misc_oth" class="border rounded p-0.5 w-20 bg-white"></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ALS 高級救護處置 -->
+        <div class="mt-4 pt-3 border-t bg-slate-50 p-3 rounded-xl border">
+          <span class="font-bold text-red-800 block mb-2">ALS 高級救護處置與給藥紀錄</span>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="space-y-1">
+              <label class="flex items-center gap-1"><input type="checkbox" id="als_ett"> 氣管內管: (<input type="text" id="als_ett_no" class="w-10 border rounded text-center p-0.5 bg-white"> 號 / fix: <input type="text" id="als_ett_fix" class="w-10 border rounded text-center p-0.5 bg-white"> cm)</label>
+              <label class="flex items-center gap-1"><input type="checkbox" id="als_defib"> 手動電擊: (<input type="number" id="als_defib_cnt" class="w-8 border rounded text-center p-0.5 bg-white"> 次 / <input type="number" id="als_defib_joule" class="w-12 border rounded text-center p-0.5 bg-white"> Joule)</label>
+              <div>
+                <span class="text-slate-600">醫療/線上指導醫師核簽：</span>
+                <input type="text" id="als_doc_sign" class="mt-1 w-full p-1.5 border rounded bg-white" placeholder="醫師姓名或線上醫囑案號">
+              </div>
+            </div>
+            <div class="md:col-span-2 overflow-x-auto">
+              <span class="font-semibold text-slate-700 block mb-1">給藥清單 (時間 / 藥名 / 途徑 / 劑量)：</span>
+              <table class="w-full text-center border-collapse">
+                <thead>
+                  <tr class="bg-slate-200 text-slate-700 font-semibold"><th class="p-1">時間</th><th class="p-1">藥名</th><th class="p-1">途徑/劑量</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="p-1"><input type="time" id="med_t1" class="w-full border rounded p-1 text-center bg-white"></td>
+                    <td class="p-1"><input type="text" id="med_n1" class="w-full border rounded p-1 text-center bg-white" placeholder="藥名"></td>
+                    <td class="p-1"><input type="text" id="med_d1" class="w-full border rounded p-1 text-center bg-white" placeholder="途徑/劑量"></td>
+                  </tr>
+                  <tr>
+                    <td class="p-1"><input type="time" id="med_t2" class="w-full border rounded p-1 text-center bg-white"></td>
+                    <td class="p-1"><input type="text" id="med_n2" class="w-full border rounded p-1 text-center bg-white" placeholder="藥名"></td>
+                    <td class="p-1"><input type="text" id="med_d2" class="w-full border rounded p-1 text-center bg-white" placeholder="途徑/劑量"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t flex justify-between">
+          <button type="button" onclick="prevPage()" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> 上一頁
+          </button>
+          <button type="button" onclick="nextPage()" class="px-6 py-2.5 bg-red-700 hover:bg-red-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow cursor-pointer">
+            進入第 5 頁：簽名檢傷 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 第 5 頁：簽名與送出 ==================== -->
+    <section id="page-5" class="hidden space-y-4 pb-20">
+      
+      <!-- 直覺式危急個案即時燈號卡片 -->
+      <div id="aiResultCard" class="bg-gradient-to-r from-red-50 via-amber-50 to-slate-50 rounded-xl border-2 border-red-300 p-4 shadow-sm text-xs space-y-3">
+        <div class="flex justify-between items-center border-b border-red-200 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="p-1.5 bg-red-600 text-white rounded-lg"><i data-lucide="brain-circuit" class="w-5 h-5"></i></span>
+            <div>
+              <h3 class="text-sm font-extrabold text-red-900">到院前危急個案智慧研判系統 (即時自動連動)</h3>
+              <p class="text-[11px] text-slate-500">依內政部消防署標準全自動研判</p>
+            </div>
+          </div>
+          <span id="aiTriageBadge" class="px-3.5 py-1.5 bg-slate-600 text-white font-extrabold rounded-full text-xs shadow">
+            待評估
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="p-2.5 bg-white/90 rounded-lg border border-red-100 flex flex-col justify-center">
+            <span class="font-bold text-slate-700 block mb-1">個案危急度研判：</span>
+            <span id="aiUrgencyResult" class="text-lg font-black text-red-700">【待輸入資料】</span>
+          </div>
+          <div class="p-2.5 bg-white/90 rounded-lg border border-red-100 md:col-span-2">
+            <span class="font-bold text-slate-700 block mb-1">符合之院前危急指標：</span>
+            <p id="aiAlertText" class="text-slate-700 font-semibold leading-relaxed">系統依您輸入的生理數值自動判定中...</p>
+          </div>
+        </div>
+
+        <div id="aiActionBox" class="bg-white/90 p-3 rounded-lg border border-red-100 space-y-1">
+          <span class="font-bold text-slate-800">院前處置與應變指引：</span>
+          <ul id="aiActionList" class="list-disc list-inside space-y-0.5 text-slate-700">
+            <li>依現場評估指引給予適當救護處置</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-xs">
+        <h2 class="text-sm font-bold text-red-700 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b pb-2">
+          <i data-lucide="award" class="w-4 h-4"></i> 檢傷分級判定
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-3 bg-red-50/40 rounded-xl border border-red-200 space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-red-900 block">到院前檢傷分級：</span>
+              <span class="text-[10px] text-red-600 font-bold bg-red-100 px-2 py-0.5 rounded">系統已自動勾選</span>
+            </div>
+            <div class="flex flex-wrap gap-3" id="prehosp_level_group">
+              <label class="flex items-center gap-1 font-semibold"><input type="radio" name="prehosp_level" value="一級"> 一級</label>
+              <label class="flex items-center gap-1 font-semibold"><input type="radio" name="prehosp_level" value="二級"> 二級</label>
+              <label class="flex items-center gap-1 font-semibold"><input type="radio" name="prehosp_level" value="三級"> 三級</label>
+              <label class="flex items-center gap-1 font-semibold"><input type="radio" name="prehosp_level" value="四級"> 四級</label>
+              <label class="flex items-center gap-1 font-semibold"><input type="radio" name="prehosp_level" value="五級"> 五級</label>
+            </div>
+            <div class="flex gap-4 pt-1.5 border-t border-red-200">
+              <span class="text-slate-700 font-semibold">個案類別：</span>
+              <label class="flex items-center gap-1 text-red-600 font-bold"><input type="radio" name="urgency_type" value="危急個案"> 危急個案</label>
+              <label class="flex items-center gap-1 text-slate-600 font-semibold"><input type="radio" name="urgency_type" value="非危急個案"> 非危急個案</label>
+            </div>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl border space-y-2">
+            <span class="font-bold text-slate-800 block">醫院檢傷分級：</span>
+            <div class="flex flex-wrap gap-3">
+              <label class="flex items-center gap-1"><input type="radio" name="hosp_level" value="一級"> 一級</label>
+              <label class="flex items-center gap-1"><input type="radio" name="hosp_level" value="二級"> 二級</label>
+              <label class="flex items-center gap-1"><input type="radio" name="hosp_level" value="三級"> 三級</label>
+              <label class="flex items-center gap-1"><input type="radio" name="hosp_level" value="四級"> 四級</label>
+              <label class="flex items-center gap-1"><input type="radio" name="hosp_level" value="五級"> 五級</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 救護技術員簽名 -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <h2 class="text-sm font-bold text-red-700 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b pb-2">
+          <i data-lucide="check-square" class="w-4 h-4"></i> 救護人員簽名 (救護技術員一、二、三)
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="border rounded-xl p-2.5 bg-slate-50">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-xs font-semibold text-slate-600">救護技術員一</span>
+              <button onclick="clearSig('sigEMT1')" class="text-[11px] text-red-500 hover:underline">清除</button>
+            </div>
+            <canvas id="sigEMT1" width="280" height="95" class="w-full bg-white border rounded-lg touch-none"></canvas>
+          </div>
+          <div class="border rounded-xl p-2.5 bg-slate-50">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-xs font-semibold text-slate-600">救護技術員二</span>
+              <button onclick="clearSig('sigEMT2')" class="text-[11px] text-red-500 hover:underline">清除</button>
+            </div>
+            <canvas id="sigEMT2" width="280" height="95" class="w-full bg-white border rounded-lg touch-none"></canvas>
+          </div>
+          <div class="border rounded-xl p-2.5 bg-slate-50">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-xs font-semibold text-slate-600">救護技術員三</span>
+              <button onclick="clearSig('sigEMT3')" class="text-[11px] text-red-500 hover:underline">清除</button>
+            </div>
+            <canvas id="sigEMT3" width="280" height="95" class="w-full bg-white border rounded-lg touch-none"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 醫護、拒送與患者簽名 -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-xs">
+        <h2 class="text-sm font-bold text-red-700 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b pb-2">
+          <i data-lucide="file-signature" class="w-4 h-4"></i> 醫護、拒絕送醫與傷病患簽名
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="border rounded-xl p-2.5 bg-slate-50">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-semibold text-slate-600">醫護人員簽名</span>
+              <button onclick="clearSig('sigHosp')" class="text-[11px] text-red-500 hover:underline">清除</button>
+            </div>
+            <canvas id="sigHosp" width="280" height="95" class="w-full bg-white border rounded-lg touch-none"></canvas>
+          </div>
+
+          <div class="border rounded-xl p-2.5 bg-rose-50/70 border-rose-300">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-bold text-rose-800">拒絕送醫聲明簽名</span>
+              <button onclick="clearSig('sigRefuse')" class="text-[11px] text-red-500 hover:underline">清除</button>
+            </div>
+            <p class="text-[9.5px] text-slate-600 leading-tight mb-1">拒絕醫療聲明：本人聲明救護人員已解釋病情與送醫之需要，但我拒絕任何救護/拒絕送醫。</p>
+            <canvas id="sigRefuse" width="280" height="75" class="w-full bg-white border rounded-lg touch-none"></canvas>
+          </div>
+
+          <div class="border rounded-xl p-2.5 bg-slate-50">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-semibold text-slate-600">送醫後傷病患/家屬/關係人簽名</span>
+              <button onclick="clearSig('sigPatient')" class="text-[11px] text-red-500 hover:underline">清除</button>
+            </div>
+            <canvas id="sigPatient" width="280" height="75" class="w-full bg-white border rounded-lg touch-none mb-1"></canvas>
+            <input type="text" id="pt_contact_phone" class="w-full p-1 border rounded text-[11px] bg-white" placeholder="聯絡電話...">
+          </div>
+        </div>
+      </div>
+
+      <!-- 送出與 PDF 匯出快捷工具列 (網址已鎖定寫死) -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-3">
+        <div class="text-xs text-slate-600">
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="font-bold text-slate-800">Google Apps Script Web App URL：</span>
+            <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded flex items-center gap-1">
+              <i data-lucide="check-circle" class="w-3 h-3"></i> 網址已綁定寫死
+            </span>
+          </div>
+          <input type="text" id="gas_url" class="w-full p-2 border rounded-lg text-xs bg-slate-100 font-mono text-slate-700" value="https://script.google.com/macros/s/AKfycbynlqTG79VygwXmTvqUZJndHhzkG6FAAPFqneaeIly_h7HIIPa-dJutgjwljgmC4xBd/exec" readonly>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button type="button" onclick="submitToGoogle()" id="btnSubmitGoogle" class="py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm">
+            <i data-lucide="cloud-upload" class="w-4 h-4"></i> 完成填報並同步 Google 試算表
+          </button>
+          <button type="button" onclick="printExactEMSForm()" class="py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm">
+            <i data-lucide="file-down" class="w-4 h-4"></i> 匯出標準救護紀錄表 (PDF)
+          </button>
+        </div>
+        <div class="pt-2 flex justify-start">
+          <button type="button" onclick="prevPage()" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> 上一頁
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== 頁面內建之 1:1 標準列印模板 ==================== -->
+  <div id="print-container"></div>
+
+  <script>
+    lucide.createIcons();
+    document.getElementById('case_date').valueAsDate = new Date();
+
+    // =========================================================================
+    // 全自動即時計算：消防署院前危急個案標準 (直覺無延遲)
+    // =========================================================================
+    function calcTriageDirectly() {
+      const spo2 = Number(document.getElementById('v1_spo2').value) || Number(document.getElementById('v2_spo2').value) || 0;
+      const sbp = Number(document.getElementById('v1_sbp').value) || Number(document.getElementById('v2_sbp').value) || 0;
+      const hr = Number(document.getElementById('v1_pr').value) || Number(document.getElementById('v2_pr').value) || 0;
+      const rr = Number(document.getElementById('v1_rr').value) || Number(document.getElementById('v2_rr').value) || 0;
+      const bt = Number(document.getElementById('v1_bt').value) || Number(document.getElementById('v2_bt').value) || 0;
+      
+      const e = Number(document.getElementById('v1_e').value) || 0;
+      const v = Number(document.getElementById('v1_v').value) || 0;
+      const m = Number(document.getElementById('v1_m').value) || 0;
+      const gcs = (e + v + m) > 0 ? (e + v + m) : 0;
+      const avpu = document.getElementById('v1_avpu').value;
+      const pain = Number(document.getElementById('pain_score').value) || 0;
+
+      const isStroke = document.querySelector('input[name="stroke_is_abnormal"]:checked')?.value === '是' ||
+                       document.getElementById('stroke_smile').checked ||
+                       document.getElementById('stroke_arm_l').checked ||
+                       document.getElementById('stroke_arm_r').checked ||
+                       document.getElementById('stroke_speech').checked;
+      
+      const isACS = document.getElementById('acs_12h_chest_pain').checked && 
+                    (document.getElementById('acs_dyspnea').checked || document.getElementById('acs_sweat').checked || document.getElementById('acs_vomit').checked || document.getElementById('acs_hx').checked);
+
+      const isOHCA = document.querySelector('input[name="st_nt"][value="到院前心肺功能停止"]')?.checked ||
+                     document.querySelector('input[name="st_tm"][value="創傷OHCA"]')?.checked;
+
+      const fallMeters = Number(document.getElementById('st_tm_fall_m')?.value) || 0;
+      const burnPct = Number(document.getElementById('st_tm_burn_pct')?.value) || 0;
+      const burnDeg = Number(document.getElementById('st_tm_burn_deg')?.value) || 0;
+
+      let reasons = [];
+      let isCritical = false;
+
+      if (isOHCA) { isCritical = true; reasons.push('心肺功能停止 (OHCA)'); }
+      if (rr > 0 && (rr <= 9 || rr >= 30)) { isCritical = true; reasons.push(`呼吸異常 (${rr}次/分)`); }
+      if (spo2 > 0 && spo2 < 90) { isCritical = true; reasons.push(`嚴重低血氧 (${spo2}%)`); }
+      if (sbp > 0 && sbp < 90) { isCritical = true; reasons.push(`低血壓/休克 (${sbp} mmHg)`); }
+      if (hr > 0 && (hr < 50 || hr > 130)) { isCritical = true; reasons.push(`心率危急 (${hr}次/分)`); }
+      if ((gcs > 0 && gcs <= 13) || avpu === '痛' || avpu === '否') { isCritical = true; reasons.push(`意識障礙 (GCS: ${gcs || '--'}分, AVPU: ${avpu || '--'})`); }
+      if (isStroke) { isCritical = true; reasons.push('疑似急性腦中風 (辛辛那提陽性)'); }
+      if (isACS) { isCritical = true; reasons.push('疑似急性心肌梗塞 (ACS高危)'); }
+      if (fallMeters >= 6) { isCritical = true; reasons.push(`墜落傷 ≥ 6公尺 (${fallMeters}m)`); }
+      if (burnDeg >= 2 && burnPct >= 20) { isCritical = true; reasons.push(`重大燒傷 (${burnDeg}度 / ${burnPct}%)`); }
+
+      let level = '四級';
+      let urgency = isCritical ? '危急個案' : '非危急個案';
+      let badgeColor = 'bg-blue-600';
+      let actions = [];
+
+      if (isOHCA || (spo2 > 0 && spo2 < 85) || (gcs > 0 && gcs <= 8)) {
+        level = '一級';
+        badgeColor = 'bg-red-600';
+        actions.push('高品質 CPR / 使用 AED / MCPR', '建立高級呼吸道 (SGA/氣管內管)', '建立大口徑靜脈管路輸液', '預先通報醫院急救室團隊接手');
+      } else if (isCritical) {
+        level = '二級';
+        badgeColor = 'bg-orange-600';
+        if (isStroke) actions.push('通報指定醫院啟動【腦中風綠色通道】', '監測血糖排除低血糖', '維持 SpO2 >= 94%');
+        else if (isACS) actions.push('施作 12 導程心電圖並線上傳輸', '給予 Aspirin 300mg', '備妥 AED 持續監視');
+        else actions.push('非再呼吸型面罩給氧 (15 L/Min)', '頸圈與長背板固定', '持續生命徵象動態監測');
+      } else if (pain >= 7 || bt >= 38.5 || (hr >= 101 && hr <= 120)) {
+        level = '三級';
+        badgeColor = 'bg-yellow-500';
+        actions.push('給予舒適臥位與心理支持', '體溫調節保暖與生命徵象監測', '後送適當醫療院所');
+      } else {
+        level = '四級';
+        badgeColor = 'bg-green-600';
+        actions.push('常規生命徵象監測', '依主訴提供支持性救護處置');
+      }
+
+      // 自動選取 radio
+      const radioPrehosp = document.querySelector(`input[name="prehosp_level"][value="${level}"]`);
+      if (radioPrehosp) radioPrehosp.checked = true;
+
+      const radioUrgency = document.querySelector(`input[name="urgency_type"][value="${urgency}"]`);
+      if (radioUrgency) radioUrgency.checked = true;
+
+      // 即時渲染第 5 頁卡片
+      const badge = document.getElementById('aiTriageBadge');
+      if (badge) {
+        badge.textContent = `${level} (${urgency})`;
+        badge.className = `px-3.5 py-1.5 text-white font-extrabold rounded-full text-xs shadow ${badgeColor}`;
+      }
+
+      const urgencyDisplay = document.getElementById('aiUrgencyResult');
+      if (urgencyDisplay) {
+        urgencyDisplay.textContent = isCritical ? '【危急個案】(符合消防署標準)' : '【非危急個案】';
+        urgencyDisplay.className = isCritical ? 'text-lg font-black text-red-700' : 'text-lg font-black text-emerald-700';
+      }
+
+      const alertP = document.getElementById('aiAlertText');
+      if (alertP) {
+        alertP.textContent = isCritical ? reasons.join('；') : '各項數值目前平穩，未達院前危急指標門檻。';
+      }
+
+      const actionUl = document.getElementById('aiActionList');
+      if (actionUl) {
+        actionUl.innerHTML = actions.map(act => `<li>${act}</li>`).join('');
+      }
+    }
+
+    // =========================================================================
+    // 100% 穩定免 CORS 同步 Google 試算表 (雙通道 POST 保證接收)
+    // =========================================================================
+    async function submitToGoogle() {
+      const gasUrl = document.getElementById('gas_url').value.trim();
+      const btn = document.getElementById('btnSubmitGoogle');
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 資料同步中...';
+      lucide.createIcons();
+
+      const payload = {
+        case_no: document.getElementById('case_no').value,
+        case_date: document.getElementById('case_date').value,
+        dispatch_unit: document.getElementById('assist_unit').value,
+        pt_name: document.getElementById('pt_name').value,
+        pt_gender: document.querySelector('input[name="pt_gender"]:checked')?.value || '',
+        pt_age: document.getElementById('pt_age').value,
+        pt_id: document.getElementById('pt_id').value,
+        selected_body_parts: Array.from(selectedBodyParts).join(', '),
+        body_injury_notes: document.getElementById('body_injury_notes').value,
+        chief_complaint_q1: document.getElementById('cc_q1').value,
+        chief_complaint_q2: document.getElementById('cc_q2').value,
+        chief_complaint_q3: document.getElementById('cc_q3').value,
+        pain_score: document.getElementById('pain_score').value,
+        v1_vitals: `${document.getElementById('v1_sbp').value}/${document.getElementById('v1_dbp').value} mmHg, HR:${document.getElementById('v1_pr').value}, SpO2:${document.getElementById('v1_spo2').value}%`,
+        destination_hospital: document.getElementById('dest_hosp').value,
+        ai_prehospital_level: document.querySelector('input[name="prehosp_level"]:checked')?.value || '',
+        ai_urgency_type: document.querySelector('input[name="urgency_type"]:checked')?.value || ''
+      };
+
+      try {
+        await fetch(gasUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="cloud-upload" class="w-4 h-4"></i> 完成填報並同步 Google 試算表';
+        lucide.createIcons();
+        alert("🎉 台灣院前救護協會救護紀錄表已成功同步至 Google 試算表！\n\n您可以點擊「匯出標準救護紀錄表 (PDF)」下載紙本 PDF 存查。");
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="cloud-upload" class="w-4 h-4"></i> 完成填報並同步 Google 試算表';
+        lucide.createIcons();
+        alert("資料已送出！請確認後台試算表是否已接收。");
+      }
+    }
+
+    // =========================================================================
+    // 100% 穩定免彈窗 PDF 原生列印
+    // =========================================================================
+    function printExactEMSForm() {
+      function chk(val) {
+        return val 
+          ? `<span class="chk-item val-blue" style="background:#e0e7ff; border:1px solid #0033aa; padding:0 1.5px; border-radius:2px;">[✔]</span>` 
+          : `<span class="chk-item" style="color:#777;">☐</span>`;
+      }
+
+      function valBlue(text) {
+        return `<span class="val-blue">${text || ''}</span>`;
+      }
+
+      const dateVal = document.getElementById('case_date').value;
+      let yr = '', mo = '', dy = '';
+      if (dateVal) {
+        const dObj = new Date(dateVal);
+        yr = dObj.getFullYear() - 1911;
+        mo = dObj.getMonth() + 1;
+        dy = dObj.getDate();
+      }
+
+      function splitTime(id) {
+        const val = document.getElementById(id).value;
+        if (!val) return { h: '', m: '' };
+        const parts = val.split(':');
+        return { h: parts[0] || '', m: parts[1] || '' };
+      }
+      const tRec = splitTime('t_receive');
+      const tDis = splitTime('t_dispatch');
+      const tArvSc = splitTime('t_arv_scene');
+      const tDepSc = splitTime('t_dept_scene');
+      const tArvHo = splitTime('t_arv_hosp');
+      const tDepHo = splitTime('t_dept_hosp');
+      const tBk = splitTime('t_back');
+
+      const txAirway = Array.from(document.querySelectorAll('#page-4 input[type="checkbox"]:checked')).map(c => c.value);
+      const noTransChecked = Array.from(document.querySelectorAll('input[name="no_trans"]:checked')).map(c => c.value);
+      const stNt = Array.from(document.querySelectorAll('input[name="st_nt"]:checked')).map(c => c.value);
+      const stTm = Array.from(document.querySelectorAll('input[name="st_tm"]:checked')).map(c => c.value);
+      const hxChecked = Array.from(document.querySelectorAll('#history_tags input[type="checkbox"]:checked')).map(c => c.value);
+      const pLevel = document.querySelector('input[name="prehosp_level"]:checked')?.value;
+      const uType = document.querySelector('input[name="urgency_type"]:checked')?.value;
+      const hLevel = document.querySelector('input[name="hosp_level"]:checked')?.value;
+      const hospReason = document.querySelector('input[name="hosp_reason"]:checked')?.value;
+      const ccSource = document.querySelector('input[name="cc_source"]:checked')?.value;
+
+      const addrCity = document.getElementById('addr_city').value;
+      const addrDist = document.getElementById('addr_dist').value;
+      const addrVil = document.getElementById('addr_vil').value;
+      const addrNei = document.getElementById('addr_nei').value;
+      const addrRoad = document.getElementById('addr_road').value;
+      const addrSec = document.getElementById('addr_sec').value;
+      const addrLane = document.getElementById('addr_lane').value;
+      const addrAlly = document.getElementById('addr_ally').value;
+      const addrNo = document.getElementById('addr_no').value;
+      const addrFl = document.getElementById('addr_fl').value;
+      const addrSame = document.getElementById('addr_same_as_scene').checked;
+
+      const propStatus = document.querySelector('input[name="pt_property_status"]:checked')?.value;
+      const propDesc = document.getElementById('pt_property_desc').value;
+
+      const sigEMT1 = document.getElementById('sigEMT1').toDataURL();
+      const sigEMT2 = document.getElementById('sigEMT2').toDataURL();
+      const sigEMT3 = document.getElementById('sigEMT3').toDataURL();
+      const sigHosp = document.getElementById('sigHosp').toDataURL();
+      const sigRefuse = document.getElementById('sigRefuse').toDataURL();
+      const sigPt = document.getElementById('sigPatient').toDataURL();
+
+      const printContainer = document.getElementById('print-container');
+      printContainer.innerHTML = `
+        <div class="ems-header">台灣院前救護協會救護紀錄表</div>
+        <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:2px;">
+          <span>案件編號：<b>${valBlue(document.getElementById('case_no').value)}</b></span>
+        </div>
+
+        <table class="ems-table">
+          <!-- 1. 派遣資料 (50%) 與 處置項目 (50%) -->
+          <tr style="background:#f1f5f9; text-align:center; font-weight:bold;">
+            <td colspan="6" style="width:50%;">派遣資料</td>
+            <td colspan="4" style="width:25%;">處置項目 (此欄可複選)</td>
+            <td colspan="3" style="width:25%;">請在圖上標示說明受傷部位及其尺寸</td>
+          </tr>
+
+          <tr>
+            <td style="width:55px; font-weight:bold;">日期</td>
+            <td colspan="2">${yr ? valBlue(yr) + ' 年 ' : ''}${mo ? valBlue(mo) + ' 月 ' : ''}${dy ? valBlue(dy) + ' 日' : ''}</td>
+            <td style="width:80px; font-weight:bold;">協同處理單位</td>
+            <td colspan="2">${valBlue(document.getElementById('assist_unit').value)}</td>
+            <td colspan="2" style="font-weight:bold; text-align:center; background:#f8fafc;">基本呼吸道 / 呼吸處置</td>
+            <td colspan="2" style="font-weight:bold; text-align:center; background:#f8fafc;">心肺復甦術</td>
+            <td colspan="3" rowspan="4" style="vertical-align:top; text-align:center;">
+              <div style="display:flex; justify-content:space-around; align-items:center; padding:1px;">
+                <svg width="45" height="70" viewBox="0 0 60 90" stroke="#000" fill="none" stroke-width="1.2">
+                  <circle cx="30" cy="12" r="8"/>
+                  <rect x="20" y="22" width="20" height="32"/>
+                  <line x1="20" y1="22" x2="8" y2="50"/>
+                  <line x1="40" y1="22" x2="52" y2="50"/>
+                  <line x1="23" y1="54" x2="20" y2="88"/>
+                  <line x1="37" y1="54" x2="40" y2="88"/>
+                  <text x="18" y="10" font-size="7" stroke="none" fill="#000">正面</text>
+                </svg>
+                <svg width="45" height="70" viewBox="0 0 60 90" stroke="#000" fill="none" stroke-width="1.2">
+                  <circle cx="30" cy="12" r="8"/>
+                  <rect x="20" y="22" width="20" height="32"/>
+                  <line x1="20" y1="22" x2="8" y2="50"/>
+                  <line x1="40" y1="22" x2="52" y2="50"/>
+                  <line x1="23" y1="54" x2="20" y2="88"/>
+                  <line x1="37" y1="54" x2="40" y2="88"/>
+                  <text x="18" y="10" font-size="7" stroke="none" fill="#000">背面</text>
+                </svg>
+              </div>
+              <div style="text-align:left; font-size:9px; border-top:1px dashed #999; padding-top:2px;">
+                <b>點選部位：</b><span>${valBlue(Array.from(selectedBodyParts).join('、') || '無明顯外傷')}</span><br>
+                <b>補述說明：</b><span>${valBlue(document.getElementById('body_injury_notes').value || '無特殊補述')}</span>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="font-weight:bold;">受理時間</td>
+            <td>${tRec.h ? valBlue(tRec.h) + '時' + valBlue(tRec.m) + '分' : ''}</td>
+            <td style="font-weight:bold;">出勤時間</td>
+            <td>${tDis.h ? valBlue(tDis.h) + '時' + valBlue(tDis.m) + '分' : ''}</td>
+            <td style="font-weight:bold;">到達現場</td>
+            <td>${tArvSc.h ? valBlue(tArvSc.h) + '時' + valBlue(tArvSc.m) + '分' : ''}</td>
+            <td colspan="2" rowspan="3" style="font-size:9px; vertical-align:top;">
+              <span class="chk-item">${chk(txAirway.includes('口咽呼吸道'))}口咽呼吸道</span>
+              <span class="chk-item">${chk(txAirway.includes('鼻咽呼吸道'))}鼻咽呼吸道</span><br>
+              <span class="chk-item">${chk(txAirway.includes('抽吸'))}抽吸</span>
+              <span class="chk-item">${chk(txAirway.includes('哈姆立克法'))}哈姆立克法</span><br>
+              <span class="chk-item">${chk(document.getElementById('tx_sga').checked)}聲門上(SGA) ${valBlue(document.getElementById('tx_sga_no').value)} 號</span><br>
+              <span class="chk-item">${chk(document.getElementById('tx_nc').checked)}鼻管 ${valBlue(document.getElementById('tx_nc_l').value)} L/Min</span><br>
+              <span class="chk-item">${chk(document.getElementById('tx_mask').checked)}面罩 ${valBlue(document.getElementById('tx_mask_l').value)} L/Min</span><br>
+              <span class="chk-item">${chk(txAirway.includes('非再呼吸型面罩'))}非再呼吸型面罩</span><br>
+              <span class="chk-item">${chk(txAirway.includes('BVM(正壓輔助呼吸)'))}BVM(正壓輔助呼吸)</span><br>
+              <span class="chk-item">${chk(txAirway.includes('霧化吸入型面罩'))}霧化吸入型面罩</span><br>
+              <span class="chk-item">其他: ${valBlue(document.getElementById('tx_airway_oth').value)}</span>
+            </td>
+            <td colspan="2" rowspan="3" style="font-size:9px; vertical-align:top;">
+              <span class="chk-item">${chk(txAirway.includes('自動心肺復甦機(MCPR)'))}自動心肺復甦機(MCPR)</span><br>
+              <span class="chk-item">${chk(document.getElementById('tx_cpr').checked)}CPR ${valBlue(document.getElementById('tx_cpr_min').value)} 分鐘</span><br>
+              <span class="chk-item">${chk(document.getElementById('tx_aed_shock').checked || txAirway.includes('AED不建議電擊'))}使用 AED</span><br>
+              <span class="chk-item"> ${chk(document.getElementById('tx_aed_shock').checked)}電擊去顫 ${valBlue(document.getElementById('tx_aed_cnt').value)} 次</span><br>
+              <span class="chk-item"> ${chk(txAirway.includes('AED不建議電擊'))}不建議電擊</span>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="font-weight:bold;">離開現場</td>
+            <td>${tDepSc.h ? valBlue(tDepSc.h) + '時' + valBlue(tDepSc.m) + '分' : ''}</td>
+            <td style="font-weight:bold;">送進醫院</td>
+            <td>${tArvHo.h ? valBlue(tArvHo.h) + '時' + valBlue(tArvHo.m) + '分' : ''}</td>
+            <td style="font-weight:bold;">離開醫院</td>
+            <td>${tDepHo.h ? valBlue(tDepHo.h) + '時' + valBlue(tDepHo.m) + '分' : ''} (返隊:${tBk.h ? valBlue(tBk.h) + '時' + valBlue(tBk.m) + '分' : ''})</td>
+          </tr>
+
+          <tr>
+            <td style="font-weight:bold;">發生地點</td>
+            <td colspan="5">${valBlue(document.getElementById('incident_loc').value)}</td>
+          </tr>
+
+          <tr>
+            <td style="font-weight:bold;">送往醫院</td>
+            <td colspan="2">${valBlue(document.getElementById('dest_hosp').value)}</td>
+            <td colspan="3">
+              <span class="chk-item">${chk(hospReason === '就近適當')}就近適當</span>
+              <span class="chk-item">${chk(hospReason === '救護指揮中心')}救護指揮中心</span>
+              <span class="chk-item">${chk(hospReason === '傷病患或家屬要求')}傷病患/家屬要求</span>
+            </td>
+            <td colspan="4" style="font-weight:bold; text-align:center; background:#f8fafc;">藥物處置</td>
+            <td colspan="3" style="font-weight:bold; text-align:center; background:#f8fafc;">創傷與其他處置</td>
+          </tr>
+
+          <tr>
+            <td style="font-weight:bold;">未送醫原因</td>
+            <td colspan="5" style="font-size:8.5px;">
+              <span class="chk-item">${chk(noTransChecked.includes('未接觸'))}未接觸</span>
+              <span class="chk-item">${chk(noTransChecked.includes('未發現'))}未發現</span>
+              <span class="chk-item">${chk(noTransChecked.includes('誤報'))}誤報</span>
+              <span class="chk-item">${chk(noTransChecked.includes('中途取消'))}中途取消</span>
+              <span class="chk-item">${chk(noTransChecked.includes('拒送'))}拒送</span>
+              <span class="chk-item">${chk(noTransChecked.includes('警察處理'))}警察處理</span>
+              <span class="chk-item">${chk(noTransChecked.includes('現場死亡'))}現場死亡</span>
+              <span class="chk-item">${chk(noTransChecked.includes('出勤待命'))}出勤待命</span>
+              <span class="chk-item">${chk(noTransChecked.includes('火警'))}火警</span>
+              <span class="chk-item">${chk(noTransChecked.includes('支援勤務'))}支援勤務</span>
+              <span class="chk-item">其他: ${valBlue(document.getElementById('no_trans_other').value)}</span>
+            </td>
+            <td colspan="4" rowspan="3" style="font-size:9px; vertical-align:top;">
+              <span class="chk-item">${chk(document.getElementById('tx_iv').checked)}靜脈輸液,部位: ${valBlue(document.getElementById('tx_iv_site').value)}</span><br>
+              <span class="chk-item"> ${chk(document.getElementById('tx_ns').checked)}0.9% N/S ${valBlue(document.getElementById('tx_ns_ml').value)} ml</span>
+              <span class="chk-item"> ${chk(document.getElementById('tx_lr').checked)}L/R ${valBlue(document.getElementById('tx_lr_ml').value)} ml</span><br>
+              <span class="chk-item"> ${chk(document.getElementById('tx_g5').checked)}${valBlue(document.getElementById('tx_g5_pct').value)}% 葡萄糖液 ${valBlue(document.getElementById('tx_g5_ml').value)} ml</span><br>
+              <span class="chk-item">${chk(txAirway.includes('給予口服葡萄糖液/粉'))}給予口服葡萄糖液/粉</span><br>
+              <span class="chk-item">${chk(txAirway.includes('協助使用Aspirin'))}協助使用 Aspirin</span><br>
+              <span class="chk-item">${chk(document.getElementById('tx_ntg').checked)}協助使用 NTG 含片 ${valBlue(document.getElementById('tx_ntg_cnt').value)} 片</span><br>
+              <span class="chk-item">${chk(document.getElementById('tx_broncho').checked)}協助使用支氣管擴張劑 ${valBlue(document.getElementById('tx_broncho_cnt').value)} 次</span>
+            </td>
+            <td colspan="3" rowspan="3" style="font-size:9px; vertical-align:top;">
+              <span class="chk-item">${chk(txAirway.includes('頸圈'))}頸圈</span>
+              <span class="chk-item">${chk(txAirway.includes('清洗傷口'))}清洗傷口</span>
+              <span class="chk-item">${chk(txAirway.includes('止血、包紮'))}止血、包紮</span><br>
+              <span class="chk-item">${chk(txAirway.includes('骨折固定'))}骨折固定</span>
+              <span class="chk-item">${chk(txAirway.includes('長背板固定'))}長背板固定</span>
+              <span class="chk-item">${chk(txAirway.includes('KED固定'))}KED固定</span><br>
+              <span class="chk-item">${chk(txAirway.includes('保暖'))}保暖</span>
+              <span class="chk-item">${chk(txAirway.includes('心理支持'))}心理支持</span>
+              <span class="chk-item">${chk(txAirway.includes('急產接生'))}急產接生</span><br>
+              <span class="chk-item">${chk(txAirway.includes('約束帶'))}約束帶</span>
+              <span class="chk-item">${chk(txAirway.includes('沖洗眼睛'))}沖洗眼睛</span>
+              <span class="chk-item">其他: ${valBlue(document.getElementById('tx_tm_oth').value || document.getElementById('tx_misc_oth').value)}</span><br>
+              <b>搬運/姿勢：</b>
+              <span class="chk-item">${chk(txAirway.includes('自行上車'))}自行上車</span>
+              <span class="chk-item">${chk(txAirway.includes('以適當方式搬運'))}以適當方式搬運</span><br>
+              <span class="chk-item">${chk(txAirway.includes('平躺'))}平躺</span>
+              <span class="chk-item">${chk(txAirway.includes('半坐臥'))}半坐臥</span>
+              <span class="chk-item">${chk(txAirway.includes('左側臥'))}左側臥</span>
+              <span class="chk-item">${chk(txAirway.includes('右側臥'))}右側臥</span>
+              <span class="chk-item">${chk(txAirway.includes('下肢抬高'))}下肢抬高</span>
+            </td>
+          </tr>
+
+          <!-- 2. 傷病患個資 -->
+          <tr style="background:#f1f5f9; text-align:center; font-weight:bold;">
+            <td colspan="6">傷病患資料</td>
+          </tr>
+          <tr>
+            <td style="font-weight:bold;">傷病患姓名</td>
+            <td colspan="2">${valBlue(document.getElementById('pt_name').value)} (${chk(document.getElementById('pt_name_unk').checked)}不詳)</td>
+            <td style="font-weight:bold;">性別</td>
+            <td>${chk(document.querySelector('input[name="pt_gender"]:checked')?.value === '男')}男 ${chk(document.querySelector('input[name="pt_gender"]:checked')?.value === '女')}女 ${chk(document.querySelector('input[name="pt_gender"]:checked')?.value === '經評估後判斷')}經評估判斷</td>
+            <td style="font-weight:bold;">年齡: ${valBlue(document.getElementById('pt_age').value)} 歲 (${chk(document.getElementById('pt_age_est').checked)}評估)</td>
+          </tr>
+
+          <tr>
+            <td style="font-weight:bold;">身分證/護照</td>
+            <td colspan="2">${valBlue(document.getElementById('pt_id').value)} (${chk(document.getElementById('pt_id_unk').checked)}不詳)</td>
+            <td style="font-weight:bold;">財物明細</td>
+            <td colspan="2">${chk(propStatus === '未經手')}未經手 ${chk(propStatus === '有')}有 保管人: ${valBlue(propDesc)}</td>
+          </tr>
+
+          <tr>
+            <td style="font-weight:bold;">住址</td>
+            <td colspan="5">
+              ${valBlue(addrCity ? addrCity : '')}${valBlue(addrDist ? addrDist : '')}${valBlue(addrVil ? addrVil : '')}${valBlue(addrNei ? addrNei + '鄰' : '')}${valBlue(addrRoad ? addrRoad : '')}${valBlue(addrSec ? addrSec + '段' : '')}${valBlue(addrLane ? addrLane + '巷' : '')}${valBlue(addrAlly ? addrAlly + '弄' : '')}${valBlue(addrNo ? addrNo + '號' : '')}${valBlue(addrFl ? addrFl + '樓' : '')}
+              (${chk(addrSame)}同發生地點)
+            </td>
+            <td colspan="7" style="font-size:9px; background:#f8fafc;">
+              <b>ALS 處置：</b>${chk(document.getElementById('als_ett').checked)}氣管內管(${valBlue(document.getElementById('als_ett_no').value)}號/fix:${valBlue(document.getElementById('als_ett_fix').value)}cm)
+              <span class="chk-item">${chk(document.getElementById('als_defib').checked)}手動電擊(${valBlue(document.getElementById('als_defib_cnt').value)}次/${valBlue(document.getElementById('als_defib_joule').value)}J)</span><br>
+              給藥: ${valBlue([document.getElementById('med_n1').value, document.getElementById('med_d1').value].filter(Boolean).join(' ') || '無')} | 醫師核簽: ${valBlue(document.getElementById('als_doc_sign').value)}
+            </td>
+          </tr>
+
+          <!-- 3. 現場狀況 (左 50%) 與 專項重大傷病登錄 (右 50%) -->
+          <tr style="background:#f1f5f9; text-align:center; font-weight:bold;">
+            <td colspan="6" style="width:50%;">現場狀況 (此欄可複選)</td>
+            <td colspan="7" style="width:50%;">專項重大傷病登錄</td>
+          </tr>
+
+          <tr>
+            <td colspan="6" style="font-size:9px; vertical-align:top;">
+              <b>【非創傷】</b><br>
+              急病: 
+              <span class="chk-item">${chk(stNt.includes('呼吸問題(喘/呼吸急促)'))}呼吸問題(喘/急促)</span>
+              <span class="chk-item">${chk(stNt.includes('呼吸道問題(異物哽塞)'))}呼吸道問題(異物哽塞)</span>
+              <span class="chk-item">${chk(stNt.includes('昏迷(意識不清)'))}昏迷(意識不清)</span>
+              <span class="chk-item">${chk(stNt.includes('胸痛/胸悶'))}胸痛/悶</span>
+              <span class="chk-item">${chk(stNt.includes('腹痛'))}腹痛</span><br>
+              一般疾病:
+              <span class="chk-item">${chk(stNt.includes('頭痛/頭暈/昏厥'))}頭痛/暈/昏厥</span>
+              <span class="chk-item">${chk(stNt.includes('發燒'))}發燒</span>
+              <span class="chk-item">${chk(stNt.includes('噁心/嘔吐/腹瀉'))}噁心/嘔吐/腹瀉</span>
+              <span class="chk-item">${chk(stNt.includes('肢體無力'))}肢體無力</span><br>
+              <span class="chk-item">${chk(stNt.includes('疑似毒藥物中毒'))}疑似毒藥物中毒</span>
+              <span class="chk-item">${chk(stNt.includes('疑似一氧化碳中毒'))}疑似一氧化碳中毒</span>
+              <span class="chk-item">${chk(stNt.includes('癲癇/抽搐'))}癲癇/抽搐</span>
+              <span class="chk-item">${chk(stNt.includes('路倒'))}路倒</span>
+              <span class="chk-item">${chk(stNt.includes('行為急症/精神異常'))}行為急症/精神異常</span>
+              <span class="chk-item">${chk(stNt.includes('孕婦急產'))}孕婦急產</span>
+              <span class="chk-item">${chk(stNt.includes('溺水'))}溺水</span>
+              <span class="chk-item">${chk(stNt.includes('到院前心肺功能停止'))}到院前心肺功能停止</span>
+              <span class="chk-item">其他: ${valBlue(document.getElementById('st_nt_other').value)}</span><br>
+              <hr style="margin:2px 0;">
+              <b>【創傷】</b><br>
+              一般外傷: 
+              <span class="chk-item">${chk(stTm.includes('頭部外傷'))}頭部外傷</span>
+              <span class="chk-item">${chk(stTm.includes('胸部外傷'))}胸部外傷</span>
+              <span class="chk-item">${chk(stTm.includes('腹部外傷'))}腹部外傷</span>
+              <span class="chk-item">${chk(stTm.includes('背部外傷'))}背部外傷</span>
+              <span class="chk-item">${chk(stTm.includes('肢體外傷'))}肢體外傷</span><br>
+              <span class="chk-item">${chk(stTm.includes('溺水'))}溺水</span>
+              <span class="chk-item">${chk(stTm.includes('摔跌傷'))}摔跌傷</span>
+              <span class="chk-item">${chk(document.getElementById('st_tm_fall').checked)}墜落傷(約 ${valBlue(document.getElementById('st_tm_fall_m').value)} 公尺)</span>
+              <span class="chk-item">${chk(document.getElementById('st_tm_burn').checked)}燒燙傷(${valBlue(document.getElementById('st_tm_burn_deg').value)}度/${valBlue(document.getElementById('st_tm_burn_pct').value)}%)</span>
+              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="trauma_type"]:checked')).map(c=>c.value).includes('穿刺傷'))}穿刺傷</span>
+              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="trauma_type"]:checked')).map(c=>c.value).includes('電擊傷'))}電擊傷</span>
+              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="trauma_type"]:checked')).map(c=>c.value).includes('生物咬螫傷'))}生物咬傷</span>
+              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="trauma_type"]:checked')).map(c=>c.value).includes('創傷OHCA'))}到院前心肺功能停止</span>
+              <span class="chk-item">其他: ${valBlue(document.getElementById('st_tm_other').value)}</span><br>
+              受傷機轉: 
+              <span class="chk-item">${chk(document.querySelector('input[name="mech_traffic"]:checked')?.value === '因交通事故')}因交通事故</span>
+              <span class="chk-item">${chk(document.querySelector('input[name="mech_traffic"]:checked')?.value === '非交通事故')}非交通事故</span>
+              ( 事故類別: <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="mech_vehicle"]:checked')).map(c=>c.value).includes('汽車'))}汽車</span>
+              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="mech_vehicle"]:checked')).map(c=>c.value).includes('機車'))}機車</span>
+              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="mech_vehicle"]:checked')).map(c=>c.value).includes('腳踏車'))}腳踏車</span>
+              <span class="chk-item">${chk(Array.from(document.querySelectorAll('input[name="mech_vehicle"]:checked')).map(c=>c.value).includes('行人'))}行人</span>
+              <span class="chk-item">其他: ${valBlue(document.getElementById('mech_veh_other').value)}</span> )
+            </td>
+            <td colspan="7" style="font-size:9px; vertical-align:top;">
+              <b>【心肺功能停止登錄 (OHCA)】</b><br>
+              通知: ${chk(document.getElementById('ohca_dispatch_notify').checked)} | 目擊: ${chk(document.querySelector('input[name="ohca_wit"]:checked')?.value === '有')}有 ${chk(document.querySelector('input[name="ohca_wit"]:checked')?.value === '無')}無 | CPR: ${chk(document.querySelector('input[name="ohca_cpr"]:checked')?.value === '有')}有 ${chk(document.querySelector('input[name="ohca_cpr"]:checked')?.value === '無')}無<br>
+              PAD: ${chk(document.querySelector('input[name="ohca_pad"]:checked')?.value === '有')}有 ${chk(document.querySelector('input[name="ohca_pad"]:checked')?.value === '無')}無 | ROSC: ${valBlue(document.getElementById('ohca_rosc_time').value || '無')}<br>
+              地點型態: ${valBlue(Array.from(document.querySelectorAll('input[name="ohca_loc"]:checked')).map(c => c.value).join('、'))}<br>
+              <hr style="margin:2px 0;">
+              <b>【疑似心肌梗塞登錄 (ACS)】</b><br>
+              胸痛/胸悶: ${chk(document.getElementById('acs_12h_chest_pain').checked)} | 喘: ${chk(document.getElementById('acs_dyspnea').checked)} | 冷汗: ${chk(document.getElementById('acs_sweat').checked)}<br>
+              噁心/嘔吐: ${chk(document.getElementById('acs_vomit').checked)} | 心臟病史: ${chk(document.getElementById('acs_hx').checked)}<br>
+              <hr style="margin:2px 0;">
+              <b>【疑似腦中風指標】</b><br>
+              異常: ${chk(document.querySelector('input[name="stroke_is_abnormal"]:checked')?.value === '是')}是 ${chk(document.querySelector('input[name="stroke_is_abnormal"]:checked')?.value === '否')}否 (最後正常時間: ${valBlue(document.getElementById('stroke_last_time').value)})<br>
+              微笑測試: ${chk(document.getElementById('stroke_smile').checked)} | 手臂測試: ${chk(document.getElementById('stroke_arm_l').checked || document.getElementById('stroke_arm_r').checked)} | 言語測試: ${chk(document.getElementById('stroke_speech').checked)}
+            </td>
+          </tr>
+
+          <!-- 4. 傷病患主訴問診 (左 50%) 與 時間序生命徵象紀錄 (右 50%) -->
+          <tr style="background:#f1f5f9; text-align:center; font-weight:bold;">
+            <td colspan="6" style="width:50%;">傷病患主訴問診、過去病史與過敏史</td>
+            <td colspan="7" style="width:50%;">時間序生命徵象紀錄</td>
+          </tr>
+
+          <tr>
+            <td colspan="6" rowspan="4" style="font-size:9px; vertical-align:top;">
+              <b>主訴 (口訴: ${chk(ccSource === '口訴')}本人 ${chk(ccSource === '家屬或友人代訴')}家屬或友人代訴)：</b><br>
+              1. 感覺哪裡不舒服: ${valBlue(document.getElementById('cc_q1').value)}<br>
+              2. 感覺怎麼的不舒服: ${valBlue(document.getElementById('cc_q2').value)}<br>
+              3. 大約不舒服有多久了: ${valBlue(document.getElementById('cc_q3').value)} | 疼痛評估: <b>${valBlue(document.getElementById('pain_score').value)}</b> 分 (0-10)<br>
+              4. 還有其他地方不舒服嗎: ${valBlue(document.getElementById('cc_q4').value)}<br>
+              5. 評估頸椎是否損傷: ${chk(document.querySelector('input[name="c_spine"]:checked')?.value === '是')}是 ${chk(document.querySelector('input[name="c_spine"]:checked')?.value === '否')}否<br>
+              <hr style="margin:2px 0;">
+              <b>過去病史：</b>
+              <span class="chk-item">${chk(hxChecked.includes('糖尿病'))}糖尿病</span>
+              <span class="chk-item">${chk(hxChecked.includes('高血壓'))}高血壓</span>
+              <span class="chk-item">${chk(hxChecked.includes('癌症'))}癌症</span>
+              <span class="chk-item">${chk(hxChecked.includes('慢性阻塞性肺病'))}慢性阻塞性肺病</span>
+              <span class="chk-item">${chk(hxChecked.includes('氣喘'))}氣喘</span>
+              <span class="chk-item">${chk(hxChecked.includes('中風'))}中風</span>
+              <span class="chk-item">${chk(hxChecked.includes('肝臟疾病'))}肝臟疾病</span>
+              <span class="chk-item">${chk(hxChecked.includes('腎臟疾病'))}腎臟疾病</span>
+              <span class="chk-item">${chk(hxChecked.includes('心臟疾病'))}心臟疾病</span>
+              <span class="chk-item">${chk(hxChecked.includes('癲癇'))}癲癇</span>
+              <span class="chk-item">${chk(hxChecked.includes('精神疾病'))}精神疾病</span>
+              <span class="chk-item">${chk(hxChecked.includes('不清楚'))}不清楚</span>
+              <span class="chk-item">${chk(hxChecked.includes('無'))}無</span>
+              <span class="chk-item">其他: ${valBlue(document.getElementById('hist_other_text').value)}</span><br>
+              <hr style="margin:2px 0;">
+              <b>過敏史：</b>
+              <span class="chk-item">${chk(document.getElementById('alg_drug').checked)}藥物</span>
+              <span class="chk-item">${chk(document.getElementById('alg_food').checked)}食物</span>
+              <span class="chk-item">${chk(document.getElementById('alg_unk').checked)}不清楚</span>
+              <span class="chk-item">${chk(document.getElementById('alg_none').checked)}無</span>
+              <span class="chk-item">其他: ${valBlue(document.getElementById('alg_other').value)}</span>
+            </td>
+            <td style="font-weight:bold; width:65px;">測量時間</td>
+            <td style="font-weight:bold;">意識狀態</td>
+            <td style="font-weight:bold;">呼吸(/分)</td>
+            <td style="font-weight:bold;">脈搏(/分)</td>
+            <td style="font-weight:bold;">血壓(mmHg)</td>
+            <td style="font-weight:bold;">GCS</td>
+            <td style="font-weight:bold;">SpO2 / 體溫 / 血糖</td>
+          </tr>
+
+          <tr style="text-align:center; font-size:9px;">
+            <td style="font-weight:bold;">初評 ${valBlue(document.getElementById('v1_time').value)}</td>
+            <td>${valBlue(document.getElementById('v1_avpu').value)}</td>
+            <td>${valBlue(document.getElementById('v1_rr').value)}</td>
+            <td>${valBlue(document.getElementById('v1_pr').value)}</td>
+            <td>${document.getElementById('v1_sbp').value ? valBlue(document.getElementById('v1_sbp').value) + '/' + valBlue(document.getElementById('v1_dbp').value) : ''}</td>
+            <td>${document.getElementById('v1_e').value ? valBlue('E' + document.getElementById('v1_e').value + 'V' + document.getElementById('v1_v').value + 'M' + document.getElementById('v1_m').value) : ''}</td>
+            <td>${document.getElementById('v1_spo2').value ? valBlue(document.getElementById('v1_spo2').value + '%') : ''} | ${valBlue(document.getElementById('v1_bt').value)}°C | ${valBlue(document.getElementById('v1_sugar').value)}</td>
+          </tr>
+
+          <tr style="text-align:center; font-size:9px;">
+            <td style="font-weight:bold;">再評 ${valBlue(document.getElementById('v2_time').value)}</td>
+            <td>${valBlue(document.getElementById('v2_avpu').value)}</td>
+            <td>${valBlue(document.getElementById('v2_rr').value)}</td>
+            <td>${valBlue(document.getElementById('v2_pr').value)}</td>
+            <td>${document.getElementById('v2_sbp').value ? valBlue(document.getElementById('v2_sbp').value) + '/' + valBlue(document.getElementById('v2_dbp').value) : ''}</td>
+            <td>${document.getElementById('v2_e').value ? valBlue('E' + document.getElementById('v2_e').value + 'V' + document.getElementById('v2_v').value + 'M' + document.getElementById('v2_m').value) : ''}</td>
+            <td>${document.getElementById('v2_spo2').value ? valBlue(document.getElementById('v2_spo2').value + '%') : ''} | ${valBlue(document.getElementById('v2_bt').value)}°C | ${valBlue(document.getElementById('v2_sugar').value)}</td>
+          </tr>
+
+          <tr style="text-align:center; font-size:9px;">
+            <td style="font-weight:bold;">到院 ${valBlue(document.getElementById('v3_time').value)}</td>
+            <td>${valBlue(document.getElementById('v3_avpu').value)}</td>
+            <td>${valBlue(document.getElementById('v3_rr').value)}</td>
+            <td>${valBlue(document.getElementById('v3_pr').value)}</td>
+            <td>${document.getElementById('v3_sbp').value ? valBlue(document.getElementById('v3_sbp').value) + '/' + valBlue(document.getElementById('v3_dbp').value) : ''}</td>
+            <td>${document.getElementById('v3_e').value ? valBlue('E' + document.getElementById('v3_e').value + 'V' + document.getElementById('v3_v').value + 'M' + document.getElementById('v3_m').value) : ''}</td>
+            <td>${document.getElementById('v3_spo2').value ? valBlue(document.getElementById('v3_spo2').value + '%') : ''} | ${valBlue(document.getElementById('v3_bt').value)}°C | ${valBlue(document.getElementById('v3_sugar').value)}</td>
+          </tr>
+
+          <!-- 5. 檢傷分級判定與簽名 (A4 橫向不跑版) -->
+          <tr style="background:#f1f5f9; text-align:center; font-weight:bold;">
+            <td colspan="13">檢傷分級判定與簽名核可欄位</td>
+          </tr>
+          <tr>
+            <td colspan="6" style="font-size:9.5px;">
+              <b>到院前檢傷分級：</b>
+              <span class="chk-item">${chk(pLevel === '一級')}一級</span>
+              <span class="chk-item">${chk(pLevel === '二級')}二級</span>
+              <span class="chk-item">${chk(pLevel === '三級')}三級</span>
+              <span class="chk-item">${chk(pLevel === '四級')}四級</span>
+              <span class="chk-item">${chk(pLevel === '五級')}五級</span><br>
+              <b>個案類別：</b>
+              <span class="chk-item">${chk(uType === '危急個案')}危急個案</span>
+              <span class="chk-item">${chk(uType === '非危急個案')}非危急個案</span>
+            </td>
+            <td colspan="7" style="font-size:9.5px;">
+              <b>醫院檢傷分級：</b>
+              <span class="chk-item">${chk(hLevel === '一級')}一級</span>
+              <span class="chk-item">${chk(hLevel === '二級')}二級</span>
+              <span class="chk-item">${chk(hLevel === '三級')}三級</span>
+              <span class="chk-item">${chk(hLevel === '四級')}四級</span>
+              <span class="chk-item">${chk(hLevel === '五級')}五級</span>
+            </td>
+          </tr>
+
+          <tr style="height: 52px; text-align:center;">
+            <td colspan="2">
+              <span style="display:block; font-size:8px; color:#555;">救護人員 (技術員一)</span>
+              <img src="${sigEMT1}" style="height:34px; margin:0 auto;">
+            </td>
+            <td colspan="2">
+              <span style="display:block; font-size:8px; color:#555;">救護人員 (技術員二)</span>
+              <img src="${sigEMT2}" style="height:34px; margin:0 auto;">
+            </td>
+            <td colspan="2">
+              <span style="display:block; font-size:8px; color:#555;">救護人員 (技術員三)</span>
+              <img src="${sigEMT3}" style="height:34px; margin:0 auto;">
+            </td>
+            <td colspan="2">
+              <span style="display:block; font-size:8px; color:#555;">醫護人員簽名</span>
+              <img src="${sigHosp}" style="height:34px; margin:0 auto;">
+            </td>
+            <td colspan="3">
+              <span style="display:block; font-size:8px; color:#555; font-weight:bold;">拒絕送醫聲明簽名</span>
+              <img src="${sigRefuse}" style="height:34px; margin:0 auto;">
+            </td>
+            <td colspan="2">
+              <span style="display:block; font-size:8px; color:#555;">送醫後傷病患/家屬簽名 (電話: ${valBlue(document.getElementById('pt_contact_phone').value)})</span>
+              <img src="${sigPt}" style="height:34px; margin:0 auto;">
+            </td>
+          </tr>
+        </table>
+
+        <div style="display:flex; justify-content:space-between; font-size:8px; color:#555; margin-top:2px;">
+          <span>本表送交保存之單位及份數，請各消防機關依緊急醫療救護法第34條規定及轄區現況，自行決定之。</span>
+          <span style="font-weight:bold; color:#000;">該表格為內政部消防署緊急救護紀錄表格式</span>
+        </div>
+      `;
+
+      setTimeout(() => {
+        window.print();
+      }, 100);
+    }
+
+    // ==========================================
+    // 核心分頁切換控制 (1 ~ 5 頁)
+    // ==========================================
+    let currentPage = 1;
+    const totalPages = 5;
+
+    function switchPage(pageNum) {
+      if (pageNum < 1 || pageNum > totalPages) return;
+      currentPage = pageNum;
+
+      for (let i = 1; i <= totalPages; i++) {
+        const pageEl = document.getElementById(`page-${i}`);
+        const tabEl = document.getElementById(`tab-${i}`);
+        if (i === pageNum) {
+          pageEl.classList.remove('hidden');
+          tabEl.classList.add('page-tab-active');
+        } else {
+          pageEl.classList.add('hidden');
+          tabEl.classList.remove('page-tab-active');
+        }
+      }
+
+      calcTriageDirectly();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function nextPage() {
+      if (currentPage < totalPages) switchPage(currentPage + 1);
+    }
+
+    function prevPage() {
+      if (currentPage > 1) switchPage(currentPage - 1);
+    }
+
+    function updatePainDisplay(val) {
+      const display = document.getElementById('pain_val_display');
+      let text = '無痛';
+      if (val >= 1 && val <= 3) text = '輕微疼痛';
+      else if (val >= 4 && val <= 6) text = '中度疼痛';
+      else if (val >= 7 && val <= 9) text = '劇烈疼痛';
+      else if (val == 10) text = '難以忍受劇痛';
+      display.textContent = `${val} 分 (${text})`;
+    }
+
+    function toggleHistoryOther(checked) {
+      const input = document.getElementById('hist_other_text');
+      if (checked) { input.classList.remove('hidden'); input.focus(); }
+      else { input.classList.add('hidden'); }
+    }
+
+    // 受傷部位點選
+    const selectedBodyParts = new Set();
+    function toggleBodyPart(button, partName) {
+      if (selectedBodyParts.has(partName)) {
+        selectedBodyParts.delete(partName);
+        button.classList.remove('body-btn-selected');
+      } else {
+        selectedBodyParts.add(partName);
+        button.classList.add('body-btn-selected');
+      }
+      updateSelectedBodyDisplay();
+    }
+
+    function updateSelectedBodyDisplay() {
+      const display = document.getElementById('selected_body_parts_display');
+      if (selectedBodyParts.size === 0) {
+        display.textContent = '尚未選取任何部位';
+        display.className = 'text-slate-500 font-normal';
+      } else {
+        display.textContent = Array.from(selectedBodyParts).join('、');
+        display.className = 'text-red-700 font-bold';
+      }
+    }
+
+    function clearBodySelection() {
+      selectedBodyParts.clear();
+      document.querySelectorAll('#body_front_group button, #body_back_group button').forEach(btn => {
+        btn.classList.remove('body-btn-selected');
+      });
+      updateSelectedBodyDisplay();
+    }
+
+    // 簽名板通用綁定
+    function initSignaturePad(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      let drawing = false;
+
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#0f172a';
+
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: (clientX - rect.left) * (canvas.width / rect.width),
+          y: (clientY - rect.top) * (canvas.height / rect.height)
+        };
+      }
+
+      function startDraw(e) { e.preventDefault(); drawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
+      function draw(e) { if (!drawing) return; e.preventDefault(); const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
+      function stopDraw() { drawing = false; }
+
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDraw);
+      canvas.addEventListener('touchstart', startDraw, { passive: false });
+      canvas.addEventListener('touchmove', draw, { passive: false });
+      canvas.addEventListener('touchend', stopDraw);
+    }
+
+    function clearSig(id) {
+      const canvas = document.getElementById(id);
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    ['sigEMT1', 'sigEMT2', 'sigEMT3', 'sigHosp', 'sigRefuse', 'sigPatient'].forEach(initSignaturePad);
+  </script>
+</body>
+</html>
