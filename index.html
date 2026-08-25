@@ -26,6 +26,7 @@
       display: none;
     }
 
+    /* A4 橫向單頁滿版鎖定列印 CSS (297mm x 210mm 絕不跑版) */
     @media print {
       @page {
         size: 297mm 210mm;
@@ -128,14 +129,14 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="font-semibold text-slate-600">案件編號</label>
-              <span id="case_no_status" class="text-[10px] text-slate-500 flex items-center gap-1">
-                <i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> 後台連線中...
+              <label class="font-semibold text-slate-600">案件編號 (年月日時分)</label>
+              <span id="case_no_status" class="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
+                <i data-lucide="clock" class="w-3 h-3"></i> 即時時間編碼
               </span>
             </div>
             <div class="flex gap-1.5">
-              <input type="text" id="case_no" class="w-full p-2 border rounded-lg bg-slate-50 font-mono font-bold text-red-700" value="TPHMA000001">
-              <button type="button" onclick="fetchNextCaseNo(true)" title="重新整理後台最新序號" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 active:scale-95 cursor-pointer">
+              <input type="text" id="case_no" class="w-full p-2 border rounded-lg bg-slate-50 font-mono font-bold text-red-700" value="TPHMA202608250000">
+              <button type="button" onclick="generateDateTimeCaseNo()" title="重新產生當前時間編號" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 active:scale-95 cursor-pointer">
                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
               </button>
             </div>
@@ -984,10 +985,32 @@
   <div id="print-container"></div>
 
   <script>
-    lucide.createIcons();
+    // ==========================================
+    // 1. 年月日時分案件編號即時生成 (格式: TPHMA + YYYYMMDDHHmm，無秒數)
+    // ==========================================
+    function generateDateTimeCaseNo() {
+      const now = new Date();
+      const YYYY = now.getFullYear();
+      const MM = String(now.getMonth() + 1).padStart(2, '0');
+      const DD = String(now.getDate()).padStart(2, '0');
+      const HH = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      
+      const newCaseNo = `TPHMA${YYYY}${MM}${DD}${HH}${mm}`;
+      document.getElementById('case_no').value = newCaseNo;
+      
+      const statusEl = document.getElementById('case_no_status');
+      if (statusEl) {
+        statusEl.innerHTML = '<span class="text-emerald-600 font-bold flex items-center gap-0.5"><i data-lucide="check" class="w-3 h-3"></i> 已更新時間編號</span>';
+        lucide.createIcons();
+      }
+    }
+
+    // 系統載入時直接以當下時間編號初始化 (無秒數)
+    generateDateTimeCaseNo();
 
     // ==========================================
-    // 1. 初始化日期並限制無法選取未來日期
+    // 2. 限制無法選取未來日期
     // ==========================================
     const todayStr = new Date().toISOString().split('T')[0];
     const caseDateEl = document.getElementById('case_date');
@@ -1002,7 +1025,7 @@
     }
 
     // ==========================================
-    // 2. 禁止填寫未來時間檢核防呆
+    // 3. 禁止填寫未來時間檢核防呆
     // ==========================================
     function validateTimeInput(el) {
       if (!el.value) return;
@@ -1022,59 +1045,6 @@
         }
       }
     }
-
-    // ==========================================
-    // 3. 自動與後台連線獲取最新案件編號（防重複跳號）
-    // ==========================================
-    let isFetchingCaseNo = false;
-    async function fetchNextCaseNo(isManual = false) {
-      if (isFetchingCaseNo) return;
-      isFetchingCaseNo = true;
-
-      const gasUrl = document.getElementById('gas_url').value.trim();
-      const caseNoInput = document.getElementById('case_no');
-      const statusEl = document.getElementById('case_no_status');
-      
-      if (statusEl) {
-        statusEl.innerHTML = '<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> 後台連線中...';
-        lucide.createIcons();
-      }
-
-      try {
-        const response = await fetch(gasUrl, { method: "GET" });
-        const res = await response.json();
-        if (res && res.status === "success" && res.next_case_no) {
-          caseNoInput.value = res.next_case_no;
-          if (statusEl) {
-            statusEl.innerHTML = '<span class="text-emerald-600 font-bold flex items-center gap-0.5"><i data-lucide="check" class="w-3 h-3"></i> 已同步後台</span>';
-            lucide.createIcons();
-          }
-          isFetchingCaseNo = false;
-          return;
-        }
-      } catch (e) {
-        console.log("後台查詢略過或離線");
-      }
-
-      // 若後台連線逾時，且為使用者手動觸發時，才建立時間戳記備用跳號，避免隨意跳動
-      if (isManual || !caseNoInput.value || caseNoInput.value === 'TPHMA000001') {
-        const now = new Date();
-        const yr = String(now.getFullYear()).slice(-2);
-        const mo = String(now.getMonth() + 1).padStart(2, '0');
-        const dy = String(now.getDate()).padStart(2, '0');
-        const timeSerial = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
-        caseNoInput.value = `TPHMA${yr}${mo}${dy}${timeSerial}`;
-      }
-
-      if (statusEl) {
-        statusEl.innerHTML = '<span class="text-amber-600 flex items-center gap-0.5">本機防撞序號</span>';
-        lucide.createIcons();
-      }
-      isFetchingCaseNo = false;
-    }
-
-    // 系統載入時連線後台取號
-    fetchNextCaseNo();
 
     // =========================================================================
     // 4. 全自動即時計算：消防署院前危急個案標準 (直覺無延遲)
@@ -1220,8 +1190,8 @@
         lucide.createIcons();
         alert("🎉 台灣院前救護協會救護紀錄表已成功同步至 Google 試算表！\n\n您可以點擊「匯出標準救護紀錄表 (PDF)」下載紙本 PDF 存查。");
         
-        // 成功送出後自動獲取下一筆案件編號
-        fetchNextCaseNo(true);
+        // 成功送出後自動產生下一筆時間編號
+        generateDateTimeCaseNo();
       } catch (err) {
         btn.disabled = false;
         btn.innerHTML = '<i data-lucide="cloud-upload" class="w-4 h-4"></i> 完成填報並同步 Google 試算表';
@@ -1247,7 +1217,7 @@
       const caseNoVal = document.getElementById('case_no').value || '未編號';
       const ptNameVal = document.getElementById('pt_name').value || '未具名';
       
-      // 關鍵修正：PDF 預設檔名與網頁標題規範
+      // PDF 預設檔名與網頁標題規範
       const exportPdfTitle = `台灣院前救護協會救護紀錄表_${caseNoVal}_${ptNameVal}`;
       const originalDocTitle = document.title;
       document.title = exportPdfTitle;
@@ -1531,7 +1501,6 @@
                 急病: 
                 <span class="chk-item">${chk(stNt.includes('呼吸問題(喘/呼吸急促)'))}呼吸問題(喘/急促)</span>
                 <span class="chk-item">${chk(stNt.includes('呼吸道問題(異物哽塞)'))}呼吸道問題(異物哽塞)</span>
-                <span class="chk-item">${chk(stNt.includes('呼吸問題(喘/呼吸急促)'))}呼吸問題(喘/急促)</span>
                 <span class="chk-item">${chk(stNt.includes('昏迷(意識不清)'))}昏迷(意識不清)</span>
                 <span class="chk-item">${chk(stNt.includes('胸痛/胸悶'))}胸痛/悶</span>
                 <span class="chk-item">${chk(stNt.includes('腹痛'))}腹痛</span><br>
@@ -1751,9 +1720,8 @@
       setTimeout(function() {
         printFrame.contentWindow.focus();
         printFrame.contentWindow.print();
-        // 列印完成後還原主視窗標題
         document.title = originalDocTitle;
-      }, 350);
+      }, 300);
     }
 
     // ==========================================
