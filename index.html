@@ -21,6 +21,63 @@
       border-color: #b91c1c !important;
       font-weight: 700;
     }
+
+    #print-container {
+      display: none;
+    }
+
+    @media print {
+      @page {
+        size: 297mm 210mm;
+        margin: 3mm 4mm;
+      }
+      html, body {
+        width: 290mm !important;
+        height: 202mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        overflow: hidden !important;
+      }
+      header, nav, main, footer, .no-print {
+        display: none !important;
+      }
+      #print-container {
+        display: block !important;
+        width: 100% !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-family: "DFKai-SB", "標楷體", "Microsoft JhengHei", sans-serif !important;
+        font-size: 9.5px !important;
+        line-height: 1.15 !important;
+      }
+      .ems-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border: 1.5px solid #000 !important;
+      }
+      .ems-table th, .ems-table td {
+        border: 1px solid #000 !important;
+        padding: 1.5px 2.5px !important;
+        vertical-align: middle !important;
+      }
+      .ems-header {
+        font-size: 16px !important;
+        font-weight: 900 !important;
+        letter-spacing: 2px !important;
+        text-align: center !important;
+        margin-bottom: 1.5px !important;
+      }
+      .chk-item {
+        display: inline-block !important;
+        white-space: nowrap !important;
+        margin-right: 2.5px !important;
+      }
+      .val-blue {
+        color: #0033aa !important;
+        font-weight: bold !important;
+      }
+    }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-900 font-sans flex flex-col min-h-screen">
@@ -70,12 +127,22 @@
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div>
-            <label class="font-semibold text-slate-600">案件編號</label>
-            <input type="text" id="case_no" class="mt-1 w-full p-2 border rounded-lg bg-slate-50 font-mono font-bold text-red-700" value="TPHMA000001">
+            <div class="flex justify-between items-center mb-1">
+              <label class="font-semibold text-slate-600">案件編號</label>
+              <span id="case_no_status" class="text-[10px] text-slate-500 flex items-center gap-1">
+                <i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> 後台連線中...
+              </span>
+            </div>
+            <div class="flex gap-1.5">
+              <input type="text" id="case_no" class="w-full p-2 border rounded-lg bg-slate-50 font-mono font-bold text-red-700" value="TPHMA000001">
+              <button type="button" onclick="fetchNextCaseNo(true)" title="重新整理後台最新序號" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 active:scale-95 cursor-pointer">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
           </div>
           <div>
-            <label class="font-semibold text-slate-600">出勤日期</label>
-            <input type="date" id="case_date" class="mt-1 w-full p-2 border rounded-lg bg-slate-50">
+            <label class="font-semibold text-slate-600">出勤日期 (禁止選取未來日期)</label>
+            <input type="date" id="case_date" class="mt-1 w-full p-2 border rounded-lg bg-slate-50" onchange="validateDateInput(this)">
           </div>
           <div>
             <label class="font-semibold text-slate-600">協同處理單位 (含後送消防分隊)</label>
@@ -83,16 +150,20 @@
           </div>
         </div>
 
+        <!-- 8 段時效紀錄 -->
         <div class="mt-4 pt-3 border-t">
-          <span class="text-xs font-bold text-slate-700 block mb-2">派遣時效時間軸</span>
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-xs font-bold text-slate-700 block">派遣時效時間軸</span>
+            <span class="text-[10px] text-slate-500">※ 系統自動限制無法輸入未來時間</span>
+          </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 text-xs">
-            <div><label class="text-slate-500">受理時間</label><input type="time" id="t_receive" class="mt-1 w-full p-1.5 border rounded"></div>
-            <div><label class="text-slate-500">出勤時間</label><input type="time" id="t_dispatch" class="mt-1 w-full p-1.5 border rounded"></div>
-            <div><label class="text-slate-500 font-bold text-red-600">到達現場</label><input type="time" id="t_arv_scene" class="mt-1 w-full p-1.5 border rounded font-semibold text-red-600 bg-red-50/50"></div>
-            <div><label class="text-slate-500">離開現場</label><input type="time" id="t_dept_scene" class="mt-1 w-full p-1.5 border rounded"></div>
-            <div><label class="text-slate-500 font-bold text-red-600">送進醫院</label><input type="time" id="t_arv_hosp" class="mt-1 w-full p-1.5 border rounded font-semibold text-red-600 bg-red-50/50"></div>
-            <div><label class="text-slate-500">離開醫院</label><input type="time" id="t_dept_hosp" class="mt-1 w-full p-1.5 border rounded"></div>
-            <div><label class="text-slate-500">返隊待命</label><input type="time" id="t_back" class="mt-1 w-full p-1.5 border rounded"></div>
+            <div><label class="text-slate-500">受理時間</label><input type="time" id="t_receive" onchange="validateTimeInput(this)" class="mt-1 w-full p-1.5 border rounded"></div>
+            <div><label class="text-slate-500">出勤時間</label><input type="time" id="t_dispatch" onchange="validateTimeInput(this)" class="mt-1 w-full p-1.5 border rounded"></div>
+            <div><label class="text-slate-500 font-bold text-red-600">到達現場</label><input type="time" id="t_arv_scene" onchange="validateTimeInput(this)" class="mt-1 w-full p-1.5 border rounded font-semibold text-red-600 bg-red-50/50"></div>
+            <div><label class="text-slate-500">離開現場</label><input type="time" id="t_dept_scene" onchange="validateTimeInput(this)" class="mt-1 w-full p-1.5 border rounded"></div>
+            <div><label class="text-slate-500 font-bold text-red-600">送進醫院</label><input type="time" id="t_arv_hosp" onchange="validateTimeInput(this)" class="mt-1 w-full p-1.5 border rounded font-semibold text-red-600 bg-red-50/50"></div>
+            <div><label class="text-slate-500">離開醫院</label><input type="time" id="t_dept_hosp" onchange="validateTimeInput(this)" class="mt-1 w-full p-1.5 border rounded"></div>
+            <div><label class="text-slate-500">返隊待命</label><input type="time" id="t_back" onchange="validateTimeInput(this)" class="mt-1 w-full p-1.5 border rounded"></div>
           </div>
         </div>
 
@@ -400,7 +471,7 @@
               <div>目擊者: <label><input type="radio" name="ohca_wit" value="有">有</label> <label><input type="radio" name="ohca_wit" value="無">無</label></div>
               <div>旁觀者CPR: <label><input type="radio" name="ohca_cpr" value="有">有</label> <label><input type="radio" name="ohca_cpr" value="無">無</label></div>
               <div>使用PAD: <label><input type="radio" name="ohca_pad" value="有">有</label> <label><input type="radio" name="ohca_pad" value="無">無</label></div>
-              <div class="col-span-2">現場ROSC: <input type="time" id="ohca_rosc_time" class="border rounded p-0.5 text-xs bg-white"></div>
+              <div class="col-span-2">現場ROSC: <input type="time" id="ohca_rosc_time" onchange="validateTimeInput(this)" class="border rounded p-0.5 text-xs bg-white"></div>
             </div>
             <div class="pt-1 border-t">
               <span class="font-semibold text-slate-700 block mb-1">事故地點型態：</span>
@@ -443,7 +514,7 @@
             </div>
             <div>
               <span class="text-slate-600">最後正常時間：</span>
-              <input type="time" id="stroke_last_time" class="mt-1 w-full p-1.5 border rounded bg-white">
+              <input type="time" id="stroke_last_time" onchange="validateTimeInput(this)" class="mt-1 w-full p-1.5 border rounded bg-white">
             </div>
             <div class="space-y-1 pt-1 border-t">
               <label class="flex items-center gap-1"><input type="checkbox" id="stroke_smile" onchange="calcTriageDirectly()"> 微笑測試異常</label>
@@ -481,7 +552,7 @@
             <tbody>
               <tr class="border-b bg-white">
                 <td class="p-2 font-bold text-slate-700 text-left">1. 現場初評</td>
-                <td class="p-1"><input type="time" id="v1_time" class="p-1 border rounded w-20 text-center"></td>
+                <td class="p-1"><input type="time" id="v1_time" onchange="validateTimeInput(this)" class="p-1 border rounded w-20 text-center"></td>
                 <td class="p-1"><select id="v1_avpu" onchange="calcTriageDirectly()" class="p-1.5 border rounded bg-slate-50"><option value="">選擇</option><option>清</option><option>聲</option><option>痛</option><option>否</option></select></td>
                 <td class="p-1"><input type="number" id="v1_rr" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
                 <td class="p-1"><input type="number" id="v1_pr" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
@@ -493,7 +564,7 @@
               </tr>
               <tr class="border-b bg-slate-50/50">
                 <td class="p-2 font-bold text-slate-700 text-left">2. 途中再評</td>
-                <td class="p-1"><input type="time" id="v2_time" class="p-1 border rounded w-20 text-center"></td>
+                <td class="p-1"><input type="time" id="v2_time" onchange="validateTimeInput(this)" class="p-1 border rounded w-20 text-center"></td>
                 <td class="p-1"><select id="v2_avpu" onchange="calcTriageDirectly()" class="p-1.5 border rounded bg-white"><option value="">選擇</option><option>清</option><option>聲</option><option>痛</option><option>否</option></select></td>
                 <td class="p-1"><input type="number" id="v2_rr" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
                 <td class="p-1"><input type="number" id="v2_pr" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
@@ -505,7 +576,7 @@
               </tr>
               <tr class="bg-white">
                 <td class="p-2 font-bold text-slate-700 text-left">3. 送達醫院</td>
-                <td class="p-1"><input type="time" id="v3_time" class="p-1 border rounded w-20 text-center"></td>
+                <td class="p-1"><input type="time" id="v3_time" onchange="validateTimeInput(this)" class="p-1 border rounded w-20 text-center"></td>
                 <td class="p-1"><select id="v3_avpu" onchange="calcTriageDirectly()" class="p-1.5 border rounded bg-slate-50"><option value="">選擇</option><option>清</option><option>聲</option><option>痛</option><option>否</option></select></td>
                 <td class="p-1"><input type="number" id="v3_rr" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
                 <td class="p-1"><input type="number" id="v3_pr" oninput="calcTriageDirectly()" class="w-14 p-1.5 border rounded text-center" placeholder="--"></td>
@@ -716,12 +787,12 @@
                 </thead>
                 <tbody>
                   <tr>
-                    <td class="p-1"><input type="time" id="med_t1" class="w-full border rounded p-1 text-center bg-white"></td>
+                    <td class="p-1"><input type="time" id="med_t1" onchange="validateTimeInput(this)" class="w-full border rounded p-1 text-center bg-white"></td>
                     <td class="p-1"><input type="text" id="med_n1" class="w-full border rounded p-1 text-center bg-white" placeholder="藥名"></td>
                     <td class="p-1"><input type="text" id="med_d1" class="w-full border rounded p-1 text-center bg-white" placeholder="途徑/劑量"></td>
                   </tr>
                   <tr>
-                    <td class="p-1"><input type="time" id="med_t2" class="w-full border rounded p-1 text-center bg-white"></td>
+                    <td class="p-1"><input type="time" id="med_t2" onchange="validateTimeInput(this)" class="w-full border rounded p-1 text-center bg-white"></td>
                     <td class="p-1"><input type="text" id="med_n2" class="w-full border rounded p-1 text-center bg-white" placeholder="藥名"></td>
                     <td class="p-1"><input type="text" id="med_d2" class="w-full border rounded p-1 text-center bg-white" placeholder="途徑/劑量"></td>
                   </tr>
@@ -880,7 +951,7 @@
         </div>
       </div>
 
-      <!-- 送出與 PDF 匯出快捷工具列 -->
+      <!-- 送出與 PDF 匯出快捷工具列 (網址已鎖定寫死) -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-3">
         <div class="text-xs text-slate-600">
           <div class="flex items-center gap-1.5 mb-1">
@@ -914,10 +985,99 @@
 
   <script>
     lucide.createIcons();
-    document.getElementById('case_date').valueAsDate = new Date();
+
+    // ==========================================
+    // 1. 初始化日期並限制無法選取未來日期
+    // ==========================================
+    const todayStr = new Date().toISOString().split('T')[0];
+    const caseDateEl = document.getElementById('case_date');
+    caseDateEl.value = todayStr;
+    caseDateEl.max = todayStr;
+
+    function validateDateInput(el) {
+      if (el.value > todayStr) {
+        alert("⚠️ 提醒：出勤日期不得填寫未來日期！系統已自動校正為今日。");
+        el.value = todayStr;
+      }
+    }
+
+    // ==========================================
+    // 2. 禁止填寫未來時間檢核防呆
+    // ==========================================
+    function validateTimeInput(el) {
+      if (!el.value) return;
+      const selectedDate = document.getElementById('case_date').value;
+      const now = new Date();
+      const currentToday = now.toISOString().split('T')[0];
+
+      if (selectedDate === currentToday) {
+        const currentHours = String(now.getHours()).padStart(2, '0');
+        const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+        const currentTime = `${currentHours}:${currentMinutes}`;
+
+        if (el.value > currentTime) {
+          alert(`⚠️ 時間填寫錯誤：您輸入的時間 (${el.value}) 超前於目前時間 (${currentTime})，無法填寫未來時間！`);
+          el.value = '';
+          el.focus();
+        }
+      }
+    }
+
+    // ==========================================
+    // 3. 自動與後台連線獲取最新案件編號（防重複跳號）
+    // ==========================================
+    let isFetchingCaseNo = false;
+    async function fetchNextCaseNo(isManual = false) {
+      if (isFetchingCaseNo) return;
+      isFetchingCaseNo = true;
+
+      const gasUrl = document.getElementById('gas_url').value.trim();
+      const caseNoInput = document.getElementById('case_no');
+      const statusEl = document.getElementById('case_no_status');
+      
+      if (statusEl) {
+        statusEl.innerHTML = '<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> 後台連線中...';
+        lucide.createIcons();
+      }
+
+      try {
+        const response = await fetch(gasUrl, { method: "GET" });
+        const res = await response.json();
+        if (res && res.status === "success" && res.next_case_no) {
+          caseNoInput.value = res.next_case_no;
+          if (statusEl) {
+            statusEl.innerHTML = '<span class="text-emerald-600 font-bold flex items-center gap-0.5"><i data-lucide="check" class="w-3 h-3"></i> 已同步後台</span>';
+            lucide.createIcons();
+          }
+          isFetchingCaseNo = false;
+          return;
+        }
+      } catch (e) {
+        console.log("後台查詢略過或離線");
+      }
+
+      // 若後台連線逾時，且為使用者手動觸發時，才建立時間戳記備用跳號，避免隨意跳動
+      if (isManual || !caseNoInput.value || caseNoInput.value === 'TPHMA000001') {
+        const now = new Date();
+        const yr = String(now.getFullYear()).slice(-2);
+        const mo = String(now.getMonth() + 1).padStart(2, '0');
+        const dy = String(now.getDate()).padStart(2, '0');
+        const timeSerial = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+        caseNoInput.value = `TPHMA${yr}${mo}${dy}${timeSerial}`;
+      }
+
+      if (statusEl) {
+        statusEl.innerHTML = '<span class="text-amber-600 flex items-center gap-0.5">本機防撞序號</span>';
+        lucide.createIcons();
+      }
+      isFetchingCaseNo = false;
+    }
+
+    // 系統載入時連線後台取號
+    fetchNextCaseNo();
 
     // =========================================================================
-    // 全自動即時計算：消防署院前危急個案標準 (直覺無延遲)
+    // 4. 全自動即時計算：消防署院前危急個案標準 (直覺無延遲)
     // =========================================================================
     function calcTriageDirectly() {
       const spo2 = Number(document.getElementById('v1_spo2').value) || Number(document.getElementById('v2_spo2').value) || 0;
@@ -1018,7 +1178,7 @@
     }
 
     // =========================================================================
-    // 100% 穩定免 CORS 同步 Google 試算表 (雙通道 POST 保證接收)
+    // 5. 100% 穩定同步 Google 試算表
     // =========================================================================
     async function submitToGoogle() {
       const gasUrl = document.getElementById('gas_url').value.trim();
@@ -1059,6 +1219,9 @@
         btn.innerHTML = '<i data-lucide="cloud-upload" class="w-4 h-4"></i> 完成填報並同步 Google 試算表';
         lucide.createIcons();
         alert("🎉 台灣院前救護協會救護紀錄表已成功同步至 Google 試算表！\n\n您可以點擊「匯出標準救護紀錄表 (PDF)」下載紙本 PDF 存查。");
+        
+        // 成功送出後自動獲取下一筆案件編號
+        fetchNextCaseNo(true);
       } catch (err) {
         btn.disabled = false;
         btn.innerHTML = '<i data-lucide="cloud-upload" class="w-4 h-4"></i> 完成填報並同步 Google 試算表';
@@ -1068,7 +1231,7 @@
     }
 
     // =========================================================================
-    // 100% 穩定動態 Landscape Iframe PDF 輸出引擎 (所有平板與電腦統一不跑版)
+    // 6. 100% 穩定動態 Landscape Iframe PDF 輸出引擎 (檔名修正與 A4 滿版)
     // =========================================================================
     function printExactEMSForm() {
       function chk(val) {
@@ -1080,6 +1243,14 @@
       function valBlue(text) {
         return `<span class="val-blue" style="color:#0033aa; font-weight:bold;">${text || ''}</span>`;
       }
+
+      const caseNoVal = document.getElementById('case_no').value || '未編號';
+      const ptNameVal = document.getElementById('pt_name').value || '未具名';
+      
+      // 關鍵修正：PDF 預設檔名與網頁標題規範
+      const exportPdfTitle = `台灣院前救護協會救護紀錄表_${caseNoVal}_${ptNameVal}`;
+      const originalDocTitle = document.title;
+      document.title = exportPdfTitle;
 
       const dateVal = document.getElementById('case_date').value;
       let yr = '', mo = '', dy = '';
@@ -1142,7 +1313,7 @@
         <html>
         <head>
           <meta charset="utf-8">
-          <title>台灣院前救護協會救護紀錄表_${document.getElementById('case_no').value}</title>
+          <title>${exportPdfTitle}</title>
           <style>
             @page { size: 297mm 210mm; margin: 3mm 4mm; }
             html, body {
@@ -1167,7 +1338,7 @@
         <body>
           <div class="ems-header">台灣院前救護協會救護紀錄表</div>
           <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:2px;">
-            <span>案件編號：<b>${valBlue(document.getElementById('case_no').value)}</b></span>
+            <span>案件編號：<b>${valBlue(caseNoVal)}</b></span>
           </div>
 
           <table class="ems-table">
@@ -1360,6 +1531,7 @@
                 急病: 
                 <span class="chk-item">${chk(stNt.includes('呼吸問題(喘/呼吸急促)'))}呼吸問題(喘/急促)</span>
                 <span class="chk-item">${chk(stNt.includes('呼吸道問題(異物哽塞)'))}呼吸道問題(異物哽塞)</span>
+                <span class="chk-item">${chk(stNt.includes('呼吸問題(喘/呼吸急促)'))}呼吸問題(喘/急促)</span>
                 <span class="chk-item">${chk(stNt.includes('昏迷(意識不清)'))}昏迷(意識不清)</span>
                 <span class="chk-item">${chk(stNt.includes('胸痛/胸悶'))}胸痛/悶</span>
                 <span class="chk-item">${chk(stNt.includes('腹痛'))}腹痛</span><br>
@@ -1558,7 +1730,6 @@
         </html>
       `;
 
-      // 建立動態沙盒 Iframe，徹底隔離並強制鎖定 A4 橫向列印
       var oldFrame = document.getElementById('print_sandbox_frame');
       if (oldFrame) oldFrame.remove();
 
@@ -1580,11 +1751,13 @@
       setTimeout(function() {
         printFrame.contentWindow.focus();
         printFrame.contentWindow.print();
-      }, 300);
+        // 列印完成後還原主視窗標題
+        document.title = originalDocTitle;
+      }, 350);
     }
 
     // ==========================================
-    // 核心分頁切換控制 (1 ~ 5 頁)
+    // 7. 核心分頁切換控制 (1 ~ 5 頁)
     // ==========================================
     let currentPage = 1;
     const totalPages = 5;
